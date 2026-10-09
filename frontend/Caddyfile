@@ -1,7 +1,10 @@
-# Caddy gets and renews the HTTPS certificate for hdvault.in automatically.
-# DNS for hdvault.in must point to the server before the first start.
+# TEMPORARY TEST MODE: plain HTTP on the server's IP, while the hdvault.in domain is on hold.
+# Login codes and session cookies travel unencrypted. Use only test accounts with dummy files.
+#
+# When hdvault.in is active again, replace the block below with the HTTPS block at the bottom,
+# set COOKIE_SECURE=true and APP_ENV=production in .env, then run: docker compose up -d --build
 
-hdvault.in {
+:80 {
 	encode zstd gzip
 
 	# API requests: /api/auth/me goes to the backend as /auth/me.
@@ -20,9 +23,29 @@ hdvault.in {
 	}
 
 	header {
-		Strict-Transport-Security "max-age=31536000; includeSubDomains"
 		X-Content-Type-Options "nosniff"
 		X-Frame-Options "DENY"
 		Referrer-Policy "no-referrer"
 	}
 }
+
+# --- HTTPS block for hdvault.in (restore when the domain is active) ---
+# hdvault.in {
+# 	encode zstd gzip
+# 	handle_path /api/* {
+# 		reverse_proxy api:8000 {
+# 			header_up X-Forwarded-For {remote_host}
+# 		}
+# 	}
+# 	handle {
+# 		root * /srv
+# 		try_files {path} /index.html
+# 		file_server
+# 	}
+# 	header {
+# 		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+# 		X-Content-Type-Options "nosniff"
+# 		X-Frame-Options "DENY"
+# 		Referrer-Policy "no-referrer"
+# 	}
+# }
