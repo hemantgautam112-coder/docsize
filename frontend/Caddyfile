@@ -1,0 +1,28 @@
+# Caddy gets and renews the HTTPS certificate for hdvault.in automatically.
+# DNS for hdvault.in must point to the server before the first start.
+
+hdvault.in {
+	encode zstd gzip
+
+	# API requests: /api/auth/me goes to the backend as /auth/me.
+	handle_path /api/* {
+		reverse_proxy api:8000 {
+			# Replace any X-Forwarded-For the browser sent, so the rate limiter sees the real client IP.
+			header_up X-Forwarded-For {remote_host}
+		}
+	}
+
+	# Everything else is the React app. Unknown paths return index.html for client-side routes.
+	handle {
+		root * /srv
+		try_files {path} /index.html
+		file_server
+	}
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "no-referrer"
+	}
+}

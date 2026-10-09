@@ -27,7 +27,16 @@ async def lifespan(_app: FastAPI):
     yield
 
 
-app = FastAPI(title="DocSize API", version="0.2.0", lifespan=lifespan)
+# The interactive docs are for development. In production they are switched off, so the API surface is not published.
+is_production = settings.app_env == "production"
+app = FastAPI(
+    title="DocSize API",
+    version="0.2.0",
+    lifespan=lifespan,
+    docs_url=None if is_production else "/docs",
+    redoc_url=None,
+    openapi_url=None if is_production else "/openapi.json",
+)
 
 app.add_middleware(
     CORSMiddleware,
