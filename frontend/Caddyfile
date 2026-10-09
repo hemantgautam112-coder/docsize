@@ -1,10 +1,7 @@
-# TEMPORARY TEST MODE: plain HTTP on the server's IP, while the hdvault.in domain is on hold.
-# Login codes and session cookies travel unencrypted. Use only test accounts with dummy files.
-#
-# When hdvault.in is active again, replace the block below with the HTTPS block at the bottom,
-# set COOKIE_SECURE=true and APP_ENV=production in .env, then run: docker compose up -d --build
+# Caddy gets and renews the HTTPS certificate for hdvault.in automatically.
+# Requires: DNS for hdvault.in points to the server, and ports 80 and 443 are open.
 
-:80 {
+hdvault.in {
 	encode zstd gzip
 
 	# API requests: /api/auth/me goes to the backend as /auth/me.
@@ -23,14 +20,16 @@
 	}
 
 	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
 		X-Content-Type-Options "nosniff"
 		X-Frame-Options "DENY"
 		Referrer-Policy "no-referrer"
 	}
 }
 
-# --- HTTPS block for hdvault.in (restore when the domain is active) ---
-# hdvault.in {
+# TEMPORARY TEST MODE (plain HTTP on the server IP). Only for use while the domain is unavailable.
+# Login codes and session cookies travel unencrypted in this mode.
+# :80 {
 # 	encode zstd gzip
 # 	handle_path /api/* {
 # 		reverse_proxy api:8000 {
@@ -41,11 +40,5 @@
 # 		root * /srv
 # 		try_files {path} /index.html
 # 		file_server
-# 	}
-# 	header {
-# 		Strict-Transport-Security "max-age=31536000; includeSubDomains"
-# 		X-Content-Type-Options "nosniff"
-# 		X-Frame-Options "DENY"
-# 		Referrer-Policy "no-referrer"
 # 	}
 # }
