@@ -14,7 +14,7 @@ from app.api.deps import get_current_user, rate_limit_by_ip, verify_csrf
 from app.config import settings
 from app.db import get_db, utcnow
 from app.models import User
-from app.schemas import CsrfOut, GoogleLoginIn, MessageOut, OtpRequestIn, OtpVerifyIn, UserOut
+from app.schemas import AuthOptionsOut, CsrfOut, GoogleLoginIn, MessageOut, OtpRequestIn, OtpVerifyIn, UserOut
 from app.security import clear_session_cookie, ensure_csrf_cookie, set_session_cookie
 from app.services.accounts import delete_account
 from app.services.google_auth import GoogleAuthError, GoogleNotConfiguredError, verify_google_credential
@@ -44,6 +44,18 @@ def get_csrf_token(request: Request, response: Response) -> CsrfOut:
     return CsrfOut(csrf_token=ensure_csrf_cookie(request, response))
 
 
+MOBILE_COMING_SOON = "Mobile login is coming soon. Please use your email."
+
+
+@router.get("/options", response_model=AuthOptionsOut)
+def auth_options() -> AuthOptionsOut:
+    """Tells the login page which sign-in methods are switched on."""
+    return AuthOptionsOut(
+        mobile_login_enabled=settings.mobile_login_enabled,
+        google_enabled=bool(settings.google_client_id),
+    )
+
+
 @router.post(
     "/request-otp",
     response_model=MessageOut,
@@ -59,6 +71,8 @@ def request_login_code(
     provider: OtpProvider = Depends(get_otp_provider),
 ) -> MessageOut:
     identifier = _normalize_or_422(body.identifier)
+    if identifier_kind(identifier) == "mobile" and not settings.mobile_login_enabled:
+        raise HTTPException(status_code=503, detail=MOBILE_COMING_SOON)
     _check_purpose(db, identifier, body.purpose)
     try:
         request_otp(db, identifier, provider)

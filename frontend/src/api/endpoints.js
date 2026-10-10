@@ -5,6 +5,7 @@ import { request } from "./client.js";
 
 export const api = {
   me: () => request("/auth/me"),
+  authOptions: () => request("/auth/options"),
   requestOtp: (identifier, purpose) =>
     request("/auth/request-otp", { method: "POST", json: { identifier, purpose } }),
   verifyOtp: (identifier, code, purpose, consent) =>

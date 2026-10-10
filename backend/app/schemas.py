@@ -23,6 +23,11 @@ class OtpVerifyIn(BaseModel):
     consent: bool = Field(default=False, description="Required for signup")
 
 
+class AuthOptionsOut(BaseModel):
+    mobile_login_enabled: bool
+    google_enabled: bool
+
+
 class GoogleLoginIn(BaseModel):
     credential: str = Field(min_length=20, max_length=4096, description="ID token from Google Sign-In")
     purpose: Purpose = "login"

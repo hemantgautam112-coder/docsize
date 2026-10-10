@@ -66,6 +66,24 @@ describe("app smoke tests", () => {
     expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
   });
 
+  it("hides the mobile option when the server has mobile login switched off", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url) => {
+        if (String(url).endsWith("/auth/csrf")) return jsonResponse({ csrf_token: "test-token" });
+        if (String(url).endsWith("/auth/me")) return jsonResponse({ detail: "Please log in to continue." }, 401);
+        if (String(url).endsWith("/auth/options")) {
+          return jsonResponse({ mobile_login_enabled: false, google_enabled: false });
+        }
+        return jsonResponse({ detail: "Not found." }, 404);
+      })
+    );
+    renderAt("/login");
+
+    expect(await screen.findByLabelText(/^email address$/i)).toBeInTheDocument();
+    expect(screen.getByText(/mobile number login is coming soon/i)).toBeInTheDocument();
+  });
+
   it("shows a setup message for Google sign-in when no client ID is configured", async () => {
     renderAt("/login");
 

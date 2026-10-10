@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { api } from "../api/endpoints.js";
 import GoogleSignInButton from "../components/GoogleSignInButton.jsx";
@@ -31,6 +31,15 @@ export default function Login() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
   const [notice, setNotice] = useState(null);
+  // Assume mobile is on until the server says otherwise, so a failed options call doesn't hide it.
+  const [mobileEnabled, setMobileEnabled] = useState(true);
+
+  useEffect(() => {
+    api
+      .authOptions()
+      .then((options) => setMobileEnabled(options.mobile_login_enabled))
+      .catch(() => {});
+  }, []);
 
   if (!loading && user) {
     return <Navigate to="/vault" replace />;
@@ -133,18 +142,23 @@ export default function Login() {
       {step === "identifier" && (
         <form className="card space-y-4" onSubmit={sendCode} aria-label={copy.heading}>
           <div>
-            <label className="label" htmlFor="identifier">Mobile number or email</label>
+            <label className="label" htmlFor="identifier">
+              {mobileEnabled ? "Mobile number or email" : "Email address"}
+            </label>
             <input
               id="identifier"
               className="input"
               type="text"
-              inputMode="email"
+              inputMode={mobileEnabled ? "text" : "email"}
               autoComplete="username"
-              placeholder="98765 43210 or you@example.com"
+              placeholder={mobileEnabled ? "98765 43210 or you@example.com" : "you@example.com"}
               value={identifier}
               onChange={(e) => setIdentifier(e.target.value)}
               required
             />
+            {!mobileEnabled && (
+              <p className="mt-2 text-xs text-slate-500">Mobile number login is coming soon. Please use your email address.</p>
+            )}
           </div>
 
           {isSignup && (

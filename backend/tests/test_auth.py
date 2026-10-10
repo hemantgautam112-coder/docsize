@@ -226,3 +226,35 @@ def test_google_signup_needs_consent(make_user, monkeypatch):
     )
 
     assert response.status_code == 400
+
+
+def test_auth_options_report_mobile_and_google_status(make_user, monkeypatch):
+    from app.config import settings
+
+    user = make_user("unused")
+    monkeypatch.setattr(settings, "mobile_login_enabled", False)
+
+    body = user.client.get("/auth/options").json()
+
+    assert body == {"mobile_login_enabled": False, "google_enabled": False}
+
+
+def test_mobile_login_returns_clear_message_when_disabled(make_user, monkeypatch):
+    from app.config import settings
+
+    monkeypatch.setattr(settings, "mobile_login_enabled", False)
+    user = make_user("9876500009")
+
+    response = user.request_code(purpose="signup")
+
+    assert response.status_code == 503
+    assert response.json()["detail"] == "Mobile login is coming soon. Please use your email."
+
+
+def test_email_login_still_works_when_mobile_is_disabled(make_user, monkeypatch):
+    from app.config import settings
+
+    monkeypatch.setattr(settings, "mobile_login_enabled", False)
+    user = make_user("mobile-off@example.com")
+
+    assert user.sign_in(purpose="signup")["email"] == "mobile-off@example.com"

@@ -35,6 +35,9 @@ class Settings(BaseSettings):
     smtp_username: str = ""
     smtp_password: str = ""
     smtp_from: str = ""
+
+    # Mobile-number login needs an SMS provider and DLT approval. Set to false until SMS is live.
+    mobile_login_enabled: bool = True
     otp_ttl_minutes: int = 5
     otp_max_attempts: int = 3
     otp_request_limit: int = 3
