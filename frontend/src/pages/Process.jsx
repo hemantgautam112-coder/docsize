@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { api } from "../api/endpoints.js";
 import { Alert, ProgressSteps, Spinner } from "../components/ui.jsx";
+import SourcePicker from "../components/SourcePicker.jsx";
 import { saveBlob } from "../lib/download.js";
 import {
   documentTypeLabel,
@@ -43,13 +44,16 @@ export default function Process() {
 
   const [formError, setFormError] = useState(null);
   const [busy, setBusy] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState(null);
   const [result, setResult] = useState(null);
   const [preview, setPreview] = useState(null); // { url, blob }
 
   const doc = documents?.find((item) => item.id === selectedId) ?? null;
   const isPdf = doc ? isPdfMime(doc.mime_type) : false;
   const profile = profiles.find((item) => String(item.id) === profileId) ?? null;
-  const outputChoices = isPdf ? ["pdf"] : ["jpeg", "png"];
+  // PDF files stay PDF. Images can also be turned into a PDF.
+  const outputChoices = isPdf ? ["pdf"] : ["jpeg", "png", "pdf"];
   const documentTypeValue = doc?.document_type;
 
   // Load the vault once.
@@ -106,6 +110,21 @@ export default function Process() {
 
   function chooseFile(id) {
     setSearchParams(id ? { document: id } : {});
+  }
+
+  // A file from the device is saved to the Vault first, then selected for processing.
+  async function handleDeviceUpload(file, documentType) {
+    setUploadError(null);
+    setUploading(true);
+    try {
+      const created = await api.uploadDocument(file, documentType);
+      setDocuments((current) => [created, ...(current ?? [])]);
+      chooseFile(created.id);
+    } catch (err) {
+      setUploadError(err.message);
+    } finally {
+      setUploading(false);
+    }
   }
 
   function chooseProfile(id) {
@@ -209,32 +228,27 @@ export default function Process() {
         </p>
       </section>
 
-      {documents.length === 0 ? (
-        <div className="card space-y-3">
-          <p className="text-sm text-slate-700">You have no files yet.</p>
-          <Link className="btn-primary" to="/vault">Go to the vault and upload a file</Link>
-        </div>
-      ) : (
-        <div className="card space-y-4">
-          <div>
-            <label className="label" htmlFor="source-file">1. Choose a file</label>
-            <select id="source-file" className="input" value={selectedId} onChange={(e) => chooseFile(e.target.value)}>
-              <option value="">Select a file...</option>
-              {documents.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.original_filename} ({documentTypeLabel(item.document_type)})
-                </option>
-              ))}
-            </select>
-          </div>
-          {doc && (
-            <p className="text-sm text-slate-600">
-              {documentTypeLabel(doc.document_type)} · {formatKB(doc.size_bytes)}
-              {documentSummary(doc) && ` · ${documentSummary(doc)}`}
-            </p>
-          )}
-        </div>
-      )}
+      <div className="card space-y-4">
+        <SourcePicker
+          documents={documents}
+          selectedId={selectedId}
+          onSelect={chooseFile}
+          onUpload={handleDeviceUpload}
+          uploading={uploading}
+          uploadError={uploadError}
+        />
+        {doc && (
+          <p className="text-sm text-slate-600">
+            Selected: {documentTypeLabel(doc.document_type)} · {formatKB(doc.size_bytes)}
+            {documentSummary(doc) && ` · ${documentSummary(doc)}`}
+          </p>
+        )}
+        {documents.length === 0 && (
+          <p className="text-xs text-slate-500">
+            Files you choose here are also kept in your <Link className="underline" to="/vault">Vault</Link>.
+          </p>
+        )}
+      </div>
 
       {doc && (
         <form className="card space-y-5" onSubmit={handleSubmit} aria-label="Processing options">

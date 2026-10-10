@@ -202,3 +202,19 @@ def _stored_key(document_id: str) -> str:
 def _derived_key(derived_id: str) -> str:
     with SessionLocal() as db:
         return db.get(DerivedFile, derived_id).storage_key
+
+
+def test_photo_can_be_converted_to_pdf_and_downloaded(make_user, photo_bytes):
+    user = make_user("9100000013")
+    user.sign_in()
+    document = user.upload("photo.jpg", photo_bytes, "photo", "image/jpeg").json()
+
+    process = user.process(document["id"], {"target_kb": 150, "output_format": "pdf"})
+
+    assert process.status_code == 201
+    body = process.json()
+    assert body["mime_type"] == "application/pdf"
+    assert body["download_name"] == "photo_custom_150KB.pdf"
+    download = user.client.get(f"/derived/{body['id']}/file", headers=user.headers)
+    assert download.headers["content-type"] == "application/pdf"
+    assert download.content.startswith(b"%PDF-")

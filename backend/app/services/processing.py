@@ -79,6 +79,6 @@ def run_processing(data: bytes, kind: str, spec: ProcessingSpec) -> EngineResult
         if spec.output_format != "pdf":
             raise ProcessingError("PDF files can only be processed into PDF output.")
         return process_pdf(data, spec)
-    if spec.output_format not in ("jpeg", "png"):
-        raise ProcessingError("Photos and signatures can be saved as JPEG or PNG.")
+    if spec.output_format not in ("jpeg", "png", "pdf"):
+        raise ProcessingError("Photos and signatures can be saved as JPEG, PNG, or PDF.")
     return process_image(data, spec)

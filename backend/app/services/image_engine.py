@@ -5,6 +5,7 @@ then compress. JPEG uses a binary search on quality. If that is not enough, the 
 in steps, but never below MIN_READABLE_SIDE_PX.
 """
 
+from functools import partial
 from io import BytesIO
 
 from PIL import Image, ImageOps
@@ -33,7 +34,7 @@ def process_image(data: bytes, spec: ProcessingSpec) -> EngineResult:
     image = _crop_and_resize(source, spec, notes, warnings)
 
     size_before_shrink = image.size
-    encode_best = _best_jpeg if spec.output_format == "jpeg" else _best_png
+    encode_best = {"jpeg": _best_jpeg, "png": _best_png, "pdf": partial(_best_pdf, dpi=spec.dpi or 200)}[spec.output_format]
     encoded, level, fits, image = _shrink_to_fit(image, spec.target_kb * 1024, encode_best)
     if image.size != size_before_shrink:
         notes.append(f"Reduced to {image.width}x{image.height} px to fit the size limit.")
@@ -145,6 +146,32 @@ def _best_jpeg(image: Image.Image, max_bytes: int) -> tuple[bytes, int, bool]:
     while low <= high:
         mid = (low + high) // 2
         candidate = _encode_jpeg(image, mid)
+        if len(candidate) <= max_bytes:
+            best, best_quality = candidate, mid
+            low = mid + 1
+        else:
+            high = mid - 1
+    return best, best_quality, True
+
+
+def _encode_pdf(image: Image.Image, quality: int, dpi: int) -> bytes:
+    """A one-page PDF with the image embedded as JPEG, so the file stays small."""
+    buffer = BytesIO()
+    image.save(buffer, format="PDF", quality=quality, resolution=dpi)
+    return buffer.getvalue()
+
+
+def _best_pdf(image: Image.Image, max_bytes: int, dpi: int = 200) -> tuple[bytes, int, bool]:
+    """Largest JPEG quality whose PDF fits. Returns (bytes, quality, fits)."""
+    smallest = _encode_pdf(image, MIN_JPEG_QUALITY, dpi)
+    if len(smallest) > max_bytes:
+        return smallest, MIN_JPEG_QUALITY, False
+
+    best, best_quality = smallest, MIN_JPEG_QUALITY
+    low, high = MIN_JPEG_QUALITY + 1, MAX_JPEG_QUALITY
+    while low <= high:
+        mid = (low + high) // 2
+        candidate = _encode_pdf(image, mid, dpi)
         if len(candidate) <= max_bytes:
             best, best_quality = candidate, mid
             low = mid + 1

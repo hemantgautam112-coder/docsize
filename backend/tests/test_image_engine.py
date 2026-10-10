@@ -98,3 +98,17 @@ def test_png_output_is_lossless_and_reports_no_quality():
     assert result.report["quality"] is None
     assert result.report["target_met"] is True
     assert _open(result.data).convert("RGB").getpixel((50, 50)) == (10, 120, 200)
+
+
+def test_image_can_be_converted_to_pdf_within_target(photo_bytes):
+    spec = ProcessingSpec(target_kb=200, output_format="pdf", dpi=200)
+
+    result = process_image(photo_bytes, spec)
+
+    assert result.mime_type == "application/pdf"
+    assert result.extension == "pdf"
+    assert result.data.startswith(b"%PDF-")
+    assert len(result.data) <= 200 * 1024 or result.report["target_met"] is False
+    assert result.report["output_format"] == "pdf"
+    reader = __import__("pypdf").PdfReader(BytesIO(result.data))
+    assert len(reader.pages) == 1
