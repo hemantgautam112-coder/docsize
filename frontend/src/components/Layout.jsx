@@ -1,4 +1,4 @@
-import { Link, NavLink } from "react-router-dom";
+import { Link, NavLink, useLocation } from "react-router-dom";
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext.jsx";
 import { STRINGS } from "../strings.js";
@@ -9,8 +9,13 @@ const NAV_ITEMS = [
   { to: "/history", label: "History" },
 ];
 
+// Pages with wide tables use the full width of the screen.
+const WIDE_PAGES = ["/vault", "/history"];
+
 export default function Layout({ children }) {
   const { user, logout } = useAuth();
+  const location = useLocation();
+  const wide = WIDE_PAGES.includes(location.pathname);
   const [busy, setBusy] = useState(false);
 
   async function handleLogout() {
@@ -25,7 +30,7 @@ export default function Layout({ children }) {
   return (
     <div className="flex min-h-screen flex-col">
       <header className="border-b border-slate-200 bg-white">
-        <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6">
+        <div className={`mx-auto flex flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6 ${wide ? "max-w-none" : "max-w-5xl"}`}>
           <Link to={user ? "/vault" : "/login"} className="text-xl font-bold text-teal-800">
             {STRINGS.appName}
           </Link>
@@ -52,7 +57,7 @@ export default function Layout({ children }) {
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-6 sm:px-6">{children}</main>
+      <main className={`mx-auto w-full flex-1 px-4 py-6 sm:px-6 ${wide ? "max-w-none" : "max-w-5xl"}`}>{children}</main>
 
       <Footer />
     </div>
