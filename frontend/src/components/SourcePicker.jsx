@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Alert, Spinner } from "./ui.jsx";
 import { ACCEPTED_EXTENSIONS, DOCUMENT_TYPES, documentTypeLabel, formatKB, validateFile } from "../lib/format.js";
 
@@ -14,16 +14,35 @@ function matchesQuery(doc, query) {
 
 /**
  * Lets the user pick a file from their device or from files already in the Vault.
+ * The list opens when the search box is clicked. The chosen file's name is shown above the search box.
  * A device file is uploaded to the Vault first, so it is also kept there for later.
  */
 export default function SourcePicker({ documents, selectedId, onSelect, onUpload, uploading, uploadError }) {
+  const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [pendingFile, setPendingFile] = useState(null);
   const [pendingType, setPendingType] = useState("photo");
   const [localError, setLocalError] = useState(null);
+  const containerRef = useRef(null);
   const fileInput = useRef(null);
 
+  const selectedDoc = documents.find((doc) => doc.id === selectedId) ?? null;
   const visible = documents.filter((doc) => matchesQuery(doc, query));
+
+  // Close the list when the user clicks anywhere outside this picker.
+  useEffect(() => {
+    function handlePointerDown(event) {
+      if (containerRef.current && !containerRef.current.contains(event.target)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handlePointerDown);
+    document.addEventListener("touchstart", handlePointerDown);
+    return () => {
+      document.removeEventListener("mousedown", handlePointerDown);
+      document.removeEventListener("touchstart", handlePointerDown);
+    };
+  }, []);
 
   function handleFileChosen(event) {
     const file = event.target.files?.[0] ?? null;
@@ -36,6 +55,7 @@ export default function SourcePicker({ documents, selectedId, onSelect, onUpload
     }
     setLocalError(null);
     setPendingFile(file);
+    setOpen(false);
   }
 
   async function handleUploadPending() {
@@ -43,62 +63,107 @@ export default function SourcePicker({ documents, selectedId, onSelect, onUpload
     setPendingFile(null);
   }
 
+  function handleSelectSaved(id) {
+    setPendingFile(null);
+    setLocalError(null);
+    setQuery("");
+    setOpen(false);
+    onSelect(id);
+  }
+
+  function handleClear() {
+    setPendingFile(null);
+    setLocalError(null);
+    setQuery("");
+    onSelect("");
+  }
+
   return (
-    <div className="space-y-3">
+    <div ref={containerRef} className="space-y-3">
       <label className="label" htmlFor="file-search">1. Choose a file</label>
+
+      {(pendingFile || selectedDoc) && (
+        <div className="flex items-center justify-between gap-3 rounded-lg border border-teal-300 bg-teal-50 px-3 py-2">
+          <p className="min-w-0 text-sm text-slate-900">
+            <span className="font-semibold">Selected: </span>
+            <span className="break-all">{pendingFile ? pendingFile.name : selectedDoc.original_filename}</span>
+            <span className="text-slate-600">
+              {" "}
+              ·{" "}
+              {pendingFile
+                ? `${formatKB(pendingFile.size)}, not saved yet`
+                : `${documentTypeLabel(selectedDoc.document_type)}, ${formatKB(selectedDoc.size_bytes)}`}
+            </span>
+          </p>
+          <button type="button" className="shrink-0 rounded-md px-2 py-1 text-sm font-semibold text-teal-900 hover:bg-teal-100" onClick={handleClear}>
+            Clear
+          </button>
+        </div>
+      )}
 
       <input
         id="file-search"
         type="search"
         className="input"
         aria-label="Search by file name or type"
-        placeholder="Search by file name or type (for example: photo, signature, marksheet)"
+        aria-expanded={open}
+        placeholder={selectedDoc ? "Search or pick another file" : "Click here to see your files, or search by name or type"}
         value={query}
-        onChange={(e) => setQuery(e.target.value)}
+        onChange={(e) => {
+          setQuery(e.target.value);
+          setOpen(true);
+        }}
+        onFocus={() => setOpen(true)}
+        onClick={() => setOpen(true)}
+        onKeyDown={(e) => {
+          if (e.key === "Escape") setOpen(false);
+        }}
         autoComplete="off"
       />
 
-      <div role="listbox" aria-label="Files to process" className="max-h-72 divide-y divide-slate-200 overflow-y-auto rounded-lg border border-slate-300 bg-white">
-        <button
-          type="button"
-          role="option"
-          aria-selected={pendingFile !== null}
-          onClick={() => fileInput.current?.click()}
-          className="flex min-h-[48px] w-full items-center gap-3 px-4 py-3 text-left text-base font-semibold text-teal-900 hover:bg-teal-50"
-        >
-          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-teal-700 text-lg text-white" aria-hidden="true">+</span>
-          Choose a file from this device
-        </button>
-
-        {visible.map((doc) => (
+      {open && (
+        <div role="listbox" aria-label="Files to process" className="max-h-72 divide-y divide-slate-200 overflow-y-auto rounded-lg border border-slate-300 bg-white shadow-md">
           <button
-            key={doc.id}
             type="button"
             role="option"
-            aria-selected={doc.id === selectedId}
+            aria-selected={pendingFile !== null}
             onClick={() => {
-              setPendingFile(null);
-              onSelect(doc.id);
+              setOpen(false);
+              fileInput.current?.click();
             }}
-            className={`flex min-h-[48px] w-full flex-col px-4 py-3 text-left hover:bg-slate-50 ${
-              doc.id === selectedId ? "bg-teal-50" : ""
-            }`}
+            className="flex min-h-[48px] w-full items-center gap-3 px-4 py-3 text-left text-base font-semibold text-teal-900 hover:bg-teal-50"
           >
-            <span className="break-all font-medium text-slate-900">{doc.original_filename}</span>
-            <span className="text-sm text-slate-600">
-              {documentTypeLabel(doc.document_type)} · {formatKB(doc.size_bytes)}
-            </span>
+            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-teal-700 text-lg text-white" aria-hidden="true">+</span>
+            Choose a file from this device
           </button>
-        ))}
 
-        {visible.length === 0 && (
-          <p className="px-4 py-3 text-sm text-slate-500">
-            {documents.length === 0
-              ? "No files in your Vault yet. Choose a file from this device to start."
-              : `No saved files match "${query}".`}
-          </p>
-        )}
-      </div>
+          {visible.map((doc) => (
+            <button
+              key={doc.id}
+              type="button"
+              role="option"
+              aria-selected={doc.id === selectedId}
+              onClick={() => handleSelectSaved(doc.id)}
+              className={`flex min-h-[48px] w-full flex-col px-4 py-3 text-left hover:bg-slate-50 ${
+                doc.id === selectedId ? "bg-teal-50" : ""
+              }`}
+            >
+              <span className="break-all font-medium text-slate-900">{doc.original_filename}</span>
+              <span className="text-sm text-slate-600">
+                {documentTypeLabel(doc.document_type)} · {formatKB(doc.size_bytes)}
+              </span>
+            </button>
+          ))}
+
+          {visible.length === 0 && (
+            <p className="px-4 py-3 text-sm text-slate-500">
+              {documents.length === 0
+                ? "No files in your Vault yet. Choose a file from this device to start."
+                : `No saved files match "${query}".`}
+            </p>
+          )}
+        </div>
+      )}
 
       <input
         ref={fileInput}

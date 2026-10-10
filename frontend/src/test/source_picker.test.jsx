@@ -24,10 +24,23 @@ function renderPicker(overrides = {}) {
 }
 
 describe("SourcePicker", () => {
-  it("lists the device option first, then the saved files", () => {
+  it("keeps the file list hidden until the search box is clicked", async () => {
     renderPicker();
-    const options = screen.getAllByRole("option");
+    const user = userEvent.setup();
 
+    expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
+
+    await user.click(screen.getByLabelText(/search by file name/i));
+
+    expect(screen.getByRole("listbox")).toBeInTheDocument();
+  });
+
+  it("lists the device option first, then the saved files", async () => {
+    renderPicker();
+    const user = userEvent.setup();
+    await user.click(screen.getByLabelText(/search by file name/i));
+
+    const options = screen.getAllByRole("option");
     expect(options[0]).toHaveTextContent("Choose a file from this device");
     expect(options).toHaveLength(4);
     expect(options[1]).toHaveTextContent("my-photo.jpg");
@@ -56,9 +69,17 @@ describe("SourcePicker", () => {
   it("selects a saved file when it is clicked", async () => {
     const props = renderPicker();
     const user = userEvent.setup();
+    await user.click(screen.getByLabelText(/search by file name/i));
 
     await user.click(screen.getByRole("option", { name: /sign\.png/i }));
 
     expect(props.onSelect).toHaveBeenCalledWith("2");
+  });
+
+  it("shows the chosen file's name above the search box", () => {
+    renderPicker({ selectedId: "2" });
+
+    expect(screen.getByText("sign.png", { exact: false })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /clear/i })).toBeInTheDocument();
   });
 });

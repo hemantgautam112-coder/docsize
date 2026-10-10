@@ -30,7 +30,8 @@ export default function Process() {
   const [documents, setDocuments] = useState(null);
   const [loadError, setLoadError] = useState(null);
 
-  const [mode, setMode] = useState("exam");
+  // Custom size is the default. The exam option is still one click away.
+  const [mode, setMode] = useState("custom");
   const [profiles, setProfiles] = useState([]);
   const [profilesError, setProfilesError] = useState(null);
   const [profileId, setProfileId] = useState("");
