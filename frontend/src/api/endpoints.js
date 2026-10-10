@@ -25,6 +25,8 @@ export const api = {
     form.append("document_type", documentType);
     return request("/documents", { method: "POST", form });
   },
+  updateDocumentTag: (id, documentType) =>
+    request(`/documents/${id}`, { method: "PATCH", json: { document_type: documentType } }),
   deleteDocument: (id) => request(`/documents/${id}`, { method: "DELETE" }),
   originalFileBlob: (id) => request(`/documents/${id}/file`, { raw: true }).then((r) => r.blob()),
 

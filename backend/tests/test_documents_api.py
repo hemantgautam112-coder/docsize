@@ -218,3 +218,22 @@ def test_photo_can_be_converted_to_pdf_and_downloaded(make_user, photo_bytes):
     download = user.client.get(f"/derived/{body['id']}/file", headers=user.headers)
     assert download.headers["content-type"] == "application/pdf"
     assert download.content.startswith(b"%PDF-")
+
+
+def test_tag_can_be_changed_and_file_is_unchanged(make_user, photo_bytes):
+    user = make_user("9100000014")
+    user.sign_in()
+    document = user.upload("pic.jpg", photo_bytes, "photo", "image/jpeg").json()
+
+    response = user.client.patch(
+        f"/documents/{document['id']}", json={"document_type": "signature"}, headers=user.headers
+    )
+
+    assert response.status_code == 200
+    assert response.json()["document_type"] == "signature"
+    assert response.json()["sha256"] == document["sha256"]
+    other = make_user("9100000015")
+    other.sign_in()
+    assert other.client.patch(
+        f"/documents/{document['id']}", json={"document_type": "photo"}, headers=other.headers
+    ).status_code == 403

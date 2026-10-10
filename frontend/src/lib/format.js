@@ -73,3 +73,20 @@ export function validateFile(file) {
   if (file.size === 0) return "This file is empty.";
   return null;
 }
+
+/**
+ * Suggests a tag from the file name, so most files need no change in the upload dialog.
+ * Anything it can't recognise is "other" for PDFs and "photo" for images.
+ */
+export function suggestTag(filename, mimeType) {
+  const name = filename.toLowerCase();
+  if (name.includes("sign")) return "signature";
+  if (name.includes("thumb")) return "thumb";
+  if (name.includes("grad")) return "graduation";
+  if (name.includes("mark") || name.includes("10th")) {
+    return name.includes("12") ? "marksheet_12" : "marksheet_10";
+  }
+  if (name.includes("photo") || name.includes("pic")) return "photo";
+  if (isPdfMime(mimeType) || name.endsWith(".pdf")) return "other";
+  return "photo";
+}

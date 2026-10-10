@@ -17,7 +17,7 @@ from app.api.deps import (
 )
 from app.config import settings
 from app.models import DocumentType, ExamProfile, OriginalDocument, User
-from app.schemas import DerivedOut, DocumentOut, ProcessIn
+from app.schemas import DerivedOut, DocumentOut, DocumentUpdate, ProcessIn
 from app.api.derived import to_derived_out
 from app.services.audit import log_event
 from app.services.derived import store_derived
@@ -82,6 +82,21 @@ def list_documents(user: User = Depends(get_current_user), db: Session = Depends
 @router.get("/{document_id}", response_model=DocumentOut)
 def get_document(document_id: str, user: User = Depends(get_current_user), db: Session = Depends(get_db)) -> OriginalDocument:
     return get_owned_original(db, document_id, user)
+
+
+@router.patch("/{document_id}", response_model=DocumentOut, dependencies=[Depends(verify_csrf)])
+def update_document(
+    document_id: str,
+    body: DocumentUpdate,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> OriginalDocument:
+    """Changes a file's tag (document type). The file itself is not changed."""
+    doc = get_owned_original(db, document_id, user)
+    doc.document_type = body.document_type.value
+    db.commit()
+    db.refresh(doc)
+    return doc
 
 
 @router.get("/{document_id}/file")

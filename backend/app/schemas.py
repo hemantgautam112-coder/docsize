@@ -67,6 +67,10 @@ class DocumentOut(BaseModel):
     created_at: datetime
 
 
+class DocumentUpdate(BaseModel):
+    document_type: DocumentType
+
+
 class ProfileIn(BaseModel):
     exam_name: str = Field(min_length=1, max_length=100)
     post: str | None = Field(default=None, max_length=150)
