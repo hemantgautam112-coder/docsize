@@ -1,4 +1,4 @@
-# Backend image for the DocSize API. Works on ARM (Oracle Ampere) and x86.
+# Backend image for the HDVault API. Works on ARM (Oracle Ampere) and x86.
 FROM python:3.12-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \

@@ -157,7 +157,7 @@ export default function Login() {
               />
               <span>
                 I agree to the <Link className="underline" to="/privacy">Privacy Policy</Link> and{" "}
-                <Link className="underline" to="/terms">Terms</Link>. I understand DocSize is not an official government site.
+                <Link className="underline" to="/terms">Terms</Link>. I understand HDVault is not an official government site.
               </span>
             </label>
           )}
@@ -213,7 +213,7 @@ export default function Login() {
         <GoogleSignInButton onCredential={handleGoogleCredential} />
         <p className="text-xs text-slate-500">
           {isSignup
-            ? "Google shares only your verified email address with DocSize."
+            ? "Google shares only your verified email address with HDVault."
             : "Use the Google account you signed up with. If you have not signed up yet, use the Sign up tab first."}
         </p>
       </section>

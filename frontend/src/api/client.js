@@ -15,7 +15,7 @@ export async function getCsrfToken({ refresh = false } = {}) {
   if (!csrfToken || refresh) {
     const response = await fetch(`${API_BASE_URL}/auth/csrf`, { credentials: "include" });
     if (!response.ok) {
-      throw new ApiError(response.status, "Could not start a secure session. Check that the DocSize server is running.");
+      throw new ApiError(response.status, "Could not start a secure session. Check that the HDVault server is running.");
     }
     csrfToken = (await response.json()).csrf_token;
   }
@@ -57,7 +57,7 @@ export async function request(path, { method = "GET", json, form, raw = false } 
   try {
     response = await fetch(`${API_BASE_URL}${path}`, { method, headers, body, credentials: "include" });
   } catch {
-    throw new ApiError(0, "Cannot reach the DocSize server. Check your connection and try again.");
+    throw new ApiError(0, "Cannot reach the HDVault server. Check your connection and try again.");
   }
 
   if (!response.ok) {

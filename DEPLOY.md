@@ -1,4 +1,4 @@
-# Deploying DocSize to hdvault.in
+# Deploying HDVault to hdvault.in
 
 This runs the app on an Oracle Cloud Ubuntu server (ARM) with Docker. Caddy serves the site and gets the HTTPS certificate automatically. PostgreSQL holds the data, and uploaded files are stored on the server disk in a Docker volume.
 
@@ -90,7 +90,7 @@ docker compose logs -f api
 
 ## 6. Check the site
 
-- Open **https://hdvault.in**. It should show the DocSize login page with a padlock.
+- Open **https://hdvault.in**. It should show the HDVault login page with a padlock.
 - Open **https://hdvault.in/api/health**. It should show `{"status":"ok","database":"ok"}`.
 - Sign up with an email address, and check the inbox for the code.
 

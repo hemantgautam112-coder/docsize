@@ -1,8 +1,8 @@
-# DocSize
+# HDVault
 
-DocSize helps Indian government exam aspirants resize and convert their photos, signatures, thumb impressions, and marksheets to the limits set by each application portal. Upload each original once, then download copies compressed to a target size, such as a photo under 20 KB.
+HDVault helps Indian government exam aspirants resize and convert their photos, signatures, thumb impressions, and marksheets to the limits set by each application portal. Upload each original once, then download copies compressed to a target size, such as a photo under 20 KB.
 
-**DocSize is an independent tool.** It is not an official government website and is not affiliated with any government body or exam conducting authority. Always verify requirements against the official notification before you upload.
+**HDVault is an independent tool.** It is not an official government website and is not affiliated with any government body or exam conducting authority. Always verify requirements against the official notification before you upload.
 
 **Do not upload Aadhaar cards or other identity numbers.** Upload only the files a portal asks for.
 

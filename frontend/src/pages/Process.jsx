@@ -205,7 +205,7 @@ export default function Process() {
       <section className="space-y-2">
         <h1 className="text-2xl font-bold text-slate-900">Resize for a portal</h1>
         <p className="text-sm text-slate-600">
-          Pick a file, choose the exam or enter your own size. DocSize creates a new copy. Your original is not changed.
+          Pick a file, choose the exam or enter your own size. HDVault creates a new copy. Your original is not changed.
         </p>
       </section>
 

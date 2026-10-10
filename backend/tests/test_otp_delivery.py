@@ -38,7 +38,7 @@ def test_email_code_is_sent_over_smtp_when_configured(monkeypatch):
     monkeypatch.setattr(settings, "smtp_host", "smtp.example.com")
     monkeypatch.setattr(settings, "smtp_username", "sender@example.com")
     monkeypatch.setattr(settings, "smtp_password", "app-password")
-    monkeypatch.setattr(settings, "smtp_from", "DocSize <sender@example.com>")
+    monkeypatch.setattr(settings, "smtp_from", "HDVault <sender@example.com>")
 
     otp_module.RoutingOtpProvider().send_code("student@example.com", "482913")
 

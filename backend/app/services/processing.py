@@ -27,7 +27,7 @@ def resolve_spec(profile: ExamProfile | None, request: ProcessIn, kind: str) -> 
     """Build the final spec. `kind` is "image" or "pdf", taken from the original document."""
     if profile is not None and profile.background.lower() != "white":
         raise ProcessingError(
-            f"{profile.exam_name} needs a {profile.background} background, which DocSize does not support yet."
+            f"{profile.exam_name} needs a {profile.background} background, which HDVault does not support yet."
         )
 
     target_kb = request.target_kb if request.target_kb is not None else (profile.max_kb if profile else None)

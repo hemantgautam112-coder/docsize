@@ -8,7 +8,7 @@ import os
 import tempfile
 from pathlib import Path
 
-_TMP_DIR = Path(tempfile.mkdtemp(prefix="docsize-test-"))
+_TMP_DIR = Path(tempfile.mkdtemp(prefix="hdvault-test-"))
 os.environ.update(
     {
         "APP_ENV": "test",

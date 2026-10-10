@@ -20,7 +20,7 @@ def test_new_user_signs_up_with_otp_and_gets_session_cookie(make_user):
     body = response.json()
     assert body["mobile"] == "9876543210"
     assert body["is_admin"] is False
-    assert "docsize_session" in response.cookies or "docsize_session" in user.client.cookies
+    assert "hdvault_session" in response.cookies or "hdvault_session" in user.client.cookies
     assert user.client.get("/auth/me").status_code == 200
 
 

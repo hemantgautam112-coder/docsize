@@ -1,8 +1,8 @@
-# DocSize frontend
+# HDVault frontend
 
 React + Vite + Tailwind CSS. It talks to the FastAPI backend in `../backend`.
 
-DocSize is an independent tool. It is not an official government website and is not affiliated with any government body or exam conducting authority.
+HDVault is an independent tool. It is not an official government website and is not affiliated with any government body or exam conducting authority.
 
 ## Requirements
 

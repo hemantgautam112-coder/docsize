@@ -1,4 +1,4 @@
-"""DocSize API entry point.
+"""HDVault API entry point.
 
 Run from the backend/ folder:  python -m uvicorn app.main:app --reload
 Interactive docs:              http://127.0.0.1:8000/docs
@@ -30,7 +30,7 @@ async def lifespan(_app: FastAPI):
 # The interactive docs are for development only. Any other environment publishes no API docs.
 docs_enabled = settings.app_env == "development"
 app = FastAPI(
-    title="DocSize API",
+    title="HDVault API",
     version="0.2.0",
     lifespan=lifespan,
     docs_url="/docs" if docs_enabled else None,

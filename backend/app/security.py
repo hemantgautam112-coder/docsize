@@ -12,8 +12,8 @@ from fastapi import Request, Response
 
 from app.config import settings
 
-SESSION_COOKIE = "docsize_session"
-CSRF_COOKIE = "docsize_csrf"
+SESSION_COOKIE = "hdvault_session"
+CSRF_COOKIE = "hdvault_csrf"
 CSRF_HEADER = "X-CSRF-Token"
 _JWT_ALGORITHM = "HS256"
 

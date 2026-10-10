@@ -1,9 +1,9 @@
-# DocSize: Project Specification
+# HDVault: Project Specification
 
-You are a senior full-stack engineer. Build a complete, working, end-to-end web application called "DocSize" (the name can be changed). Deliver all code, not snippets.
+You are a senior full-stack engineer. Build a complete, working, end-to-end web application called "HDVault" (the name can be changed). Deliver all code, not snippets.
 
 ## Purpose
-Indian government exam aspirants must upload photos, signatures, thumb impressions, and marksheets to application portals. Each portal has different file size and format limits, and students repeatedly resize files by hand. DocSize lets a user upload original documents once, then download derived copies compressed or converted to a target size (for example, a photo under 20 KB). Original files must never be modified. Users can come back and download any derived version later.
+Indian government exam aspirants must upload photos, signatures, thumb impressions, and marksheets to application portals. Each portal has different file size and format limits, and students repeatedly resize files by hand. HDVault lets a user upload original documents once, then download derived copies compressed or converted to a target size (for example, a photo under 20 KB). Original files must never be modified. Users can come back and download any derived version later.
 
 ## Scope and Constraints
 - This phase uses only free and open-source tools. No paid APIs or cloud services.
@@ -72,7 +72,7 @@ Every processing run returns a report: final_size_kb, quality setting, dimension
 - Include a virus-scan hook as a placeholder interface, with no-op as the default implementation.
 
 ### 8. Disclaimer and UX
-- Footer and landing page state that DocSize is an independent tool, not affiliated with any government body, and that users must verify requirements against the official notification.
+- Footer and landing page state that HDVault is an independent tool, not affiliated with any government body, and that users must verify requirements against the official notification.
 - Mobile-first design with large buttons, a clear progress indicator during processing, and plain-language error messages.
 - Structure UI strings so Hindi and other languages can be added later.
 

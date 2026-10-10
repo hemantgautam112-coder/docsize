@@ -53,7 +53,7 @@ class ConsoleOtpProvider:
 
     def send_code(self, identifier: str, code: str) -> None:
         print(
-            f"\n[DocSize DEV] OTP for {mask_identifier(identifier)}: {code} "
+            f"\n[HDVault DEV] OTP for {mask_identifier(identifier)}: {code} "
             f"(valid {settings.otp_ttl_minutes} min)\n",
             flush=True,
         )
@@ -64,11 +64,11 @@ class SmtpOtpProvider:
 
     def send_code(self, identifier: str, code: str) -> None:
         message = EmailMessage()
-        message["Subject"] = "Your DocSize login code"
+        message["Subject"] = "Your HDVault login code"
         message["From"] = settings.smtp_from or settings.smtp_username
         message["To"] = identifier
         message.set_content(
-            f"Your DocSize code is {code}.\n\n"
+            f"Your HDVault code is {code}.\n\n"
             f"It expires in {settings.otp_ttl_minutes} minutes. Never share this code with anyone.\n\n"
             "If you did not ask for this code, you can ignore this email.\n"
         )
