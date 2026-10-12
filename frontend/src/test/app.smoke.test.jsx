@@ -99,6 +99,6 @@ describe("app smoke tests", () => {
   it("shows the privacy page without requiring a session", async () => {
     renderAt("/privacy");
 
-    expect(await screen.findByRole("heading", { name: /^privacy$/i })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: /privacy policy/i })).toBeInTheDocument();
   });
 });
