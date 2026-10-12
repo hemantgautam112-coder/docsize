@@ -73,6 +73,7 @@ function Footer() {
         <p className="flex flex-wrap gap-4">
           <Link className="underline hover:text-teal-800" to="/privacy">Privacy</Link>
           <Link className="underline hover:text-teal-800" to="/terms">Terms</Link>
+          <a className="underline hover:text-teal-800" href={`mailto:${STRINGS.supportEmail}`}>Contact: {STRINGS.supportEmail}</a>
         </p>
       </div>
     </footer>
