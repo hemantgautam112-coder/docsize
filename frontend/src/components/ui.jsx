@@ -42,11 +42,11 @@ export function ProgressSteps({ steps, intervalMs = 1500 }) {
 }
 
 /** Two-step delete: the first click asks for confirmation, so nothing is removed by accident. */
-export function ConfirmButton({ onConfirm, label = "Delete", confirmLabel = "Yes, delete", disabled }) {
+export function ConfirmButton({ onConfirm, label = "Delete", confirmLabel = "Yes, delete", disabled, className = "btn-secondary" }) {
   const [asking, setAsking] = useState(false);
   if (!asking) {
     return (
-      <button type="button" className="btn-secondary" onClick={() => setAsking(true)} disabled={disabled}>
+      <button type="button" className={className} onClick={() => setAsking(true)} disabled={disabled}>
         {label}
       </button>
     );

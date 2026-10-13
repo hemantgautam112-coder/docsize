@@ -2,11 +2,13 @@ import { Link } from "react-router-dom";
 import { ConfirmButton } from "./ui.jsx";
 import { DOCUMENT_TYPES, documentSummary, formatDateTime, formatKB } from "../lib/format.js";
 
-const actionClass =
-  "whitespace-nowrap rounded-md border border-slate-300 bg-white px-3 py-1.5 text-center text-sm font-semibold text-slate-800 hover:bg-slate-100 disabled:text-slate-400";
+// All four action buttons share one size and alignment, so they look even in each card.
+const actionBase =
+  "inline-flex min-h-[44px] w-full items-center justify-center whitespace-nowrap rounded-md px-3 py-2 text-center text-sm font-semibold";
 
-const resizeClass =
-  "whitespace-nowrap rounded-md bg-blue-900 px-3 py-1.5 text-center text-sm font-semibold text-white hover:bg-blue-950";
+const actionClass = `${actionBase} border border-slate-300 bg-white text-slate-800 hover:bg-slate-100 disabled:text-slate-400`;
+
+const resizeClass = `${actionBase} bg-blue-900 text-white hover:bg-blue-950`;
 
 /**
  * One card per file, in the same layout on every screen size.
@@ -50,6 +52,7 @@ export default function DocumentsTable({ documents, busyId, onPreview, onDownloa
               confirmLabel="Yes, delete"
               disabled={busyId === doc.id}
               onConfirm={() => onDelete(doc)}
+              className={actionClass}
             />
           </div>
         </li>
