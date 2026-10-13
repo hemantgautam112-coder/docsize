@@ -75,7 +75,8 @@ app.include_router(documents.router)
 app.include_router(derived.router)
 
 
-@app.get("/health", tags=["system"])
+# GET for people and tools, HEAD for uptime monitors that send lighter requests.
+@app.api_route("/health", methods=["GET", "HEAD"], tags=["system"])
 def health(db: Session = Depends(get_db)) -> dict:
     db.execute(text("SELECT 1"))
     return {"status": "ok", "database": "ok"}

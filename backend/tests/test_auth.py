@@ -258,3 +258,10 @@ def test_email_login_still_works_when_mobile_is_disabled(make_user, monkeypatch)
     user = make_user("mobile-off@example.com")
 
     assert user.sign_in(purpose="signup")["email"] == "mobile-off@example.com"
+
+
+def test_health_check_accepts_get_and_head(make_user):
+    user = make_user("unused")
+
+    assert user.client.get("/health").status_code == 200
+    assert user.client.head("/health").status_code == 200
