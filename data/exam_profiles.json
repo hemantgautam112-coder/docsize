@@ -1,4 +1,21 @@
 {
-  "_about": "Exam requirements used by the Standard Exam mode. Every value must match the official notification. Set is_verified to true only after checking it against the PDF.",
-  "profiles": []
+  "_about": "Exam requirements for Standard Exam mode. Every value must match the official notification. Set is_placeholder to false only after checking the value against the PDF, and record the page in notes.",
+  "profiles": [
+    {
+      "exam_name": "RRB NTPC Graduate (CEN 06/2026)",
+      "post": "All graduate posts",
+      "document_type": "signature",
+      "max_kb": 49,
+      "min_kb": 30,
+      "output_format": "jpeg",
+      "width_px": null,
+      "height_px": null,
+      "dpi": 100,
+      "background": "white",
+      "notes": "Signature: JPG/JPEG only. File size 30 to 49 KB. Minimum 140 x 60 px and minimum 100 DPI. Black ink on white paper, running handwriting (not block capitals). Source: CEN No. 06/2026, para 14.5.1, page 23. The min pixel size is not enforced by the resize; check it on the scanned image.",
+      "source_url": "https://rrb.indianrailways.gov.in",
+      "last_verified_on": "2026-10-13",
+      "is_placeholder": false
+    }
+  ]
 }

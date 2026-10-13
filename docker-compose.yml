@@ -33,6 +33,7 @@ services:
       STORAGE_DIR: /data/storage
     volumes:
       - docsize_files:/data/storage
+      - ./data:/app/data:ro
     depends_on:
       db:
         condition: service_healthy
