@@ -18,16 +18,18 @@ function isIosSafari() {
  * On Android and desktop Chrome, a real install button is shown. On iPhone, a short how-to is shown instead.
  */
 export default function InstallButton() {
-  const [installEvent, setInstallEvent] = useState(null);
+  const [installEvent, setInstallEvent] = useState(() => window.__deferredInstallPrompt ?? null);
   const [installed, setInstalled] = useState(isInstalled());
   const [showIosHelp, setShowIosHelp] = useState(false);
 
   useEffect(() => {
     function handlePrompt(event) {
       event.preventDefault();
+      window.__deferredInstallPrompt = event;
       setInstallEvent(event);
     }
     function handleInstalled() {
+      window.__deferredInstallPrompt = null;
       setInstalled(true);
       setInstallEvent(null);
     }
