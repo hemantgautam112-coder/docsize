@@ -167,7 +167,7 @@ export default function Vault() {
         ))}
 
         {progress && (
-          <p className="text-sm font-medium text-teal-900" aria-live="polite">
+          <p className="text-sm font-medium text-blue-900" aria-live="polite">
             Uploading {Math.min(progress.done + 1, progress.total)} of {progress.total}...
           </p>
         )}

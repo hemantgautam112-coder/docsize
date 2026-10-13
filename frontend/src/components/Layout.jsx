@@ -31,7 +31,7 @@ export default function Layout({ children }) {
     <div className="flex min-h-screen flex-col">
       <header className="border-b border-slate-200 bg-white">
         <div className={`mx-auto flex flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6 ${wide ? "max-w-none" : "max-w-5xl"}`}>
-          <Link to={user ? "/vault" : "/login"} className="text-xl font-bold text-teal-800">
+          <Link to={user ? "/vault" : "/login"} className="text-xl font-bold text-blue-800">
             {STRINGS.appName}
           </Link>
           {user && (
@@ -42,7 +42,7 @@ export default function Layout({ children }) {
                   to={item.to}
                   className={({ isActive }) =>
                     `rounded-md px-3 py-2 text-sm font-medium ${
-                      isActive ? "bg-teal-50 text-teal-900" : "text-slate-700 hover:bg-slate-100"
+                      isActive ? "bg-blue-50 text-blue-900" : "text-slate-700 hover:bg-slate-100"
                     }`
                   }
                 >
@@ -71,9 +71,9 @@ function Footer() {
         <p className="font-medium text-slate-800">{STRINGS.disclaimer}</p>
         <p>{STRINGS.sensitiveWarning}</p>
         <p className="flex flex-wrap gap-4">
-          <Link className="underline hover:text-teal-800" to="/privacy">Privacy</Link>
-          <Link className="underline hover:text-teal-800" to="/terms">Terms</Link>
-          <a className="underline hover:text-teal-800" href={`mailto:${STRINGS.supportEmail}`}>Contact: {STRINGS.supportEmail}</a>
+          <Link className="underline hover:text-blue-800" to="/privacy">Privacy</Link>
+          <Link className="underline hover:text-blue-800" to="/terms">Terms</Link>
+          <a className="underline hover:text-blue-800" href={`mailto:${STRINGS.supportEmail}`}>Contact: {STRINGS.supportEmail}</a>
         </p>
       </div>
     </footer>

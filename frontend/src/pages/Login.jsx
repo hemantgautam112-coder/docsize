@@ -126,7 +126,7 @@ export default function Login() {
             aria-selected={tab === name}
             onClick={() => switchTab(name)}
             className={`min-h-[44px] rounded-lg text-base font-semibold ${
-              tab === name ? "bg-white text-teal-900 shadow-sm" : "text-slate-600"
+              tab === name ? "bg-white text-blue-900 shadow-sm" : "text-slate-600"
             }`}
           >
             {name === "login" ? "Log in" : "Sign up"}

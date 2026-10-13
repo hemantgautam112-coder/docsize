@@ -83,7 +83,7 @@ export default function SourcePicker({ documents, selectedId, onSelect, onUpload
       <label className="label" htmlFor="file-search">1. Choose a file</label>
 
       {(pendingFile || selectedDoc) && (
-        <div className="flex items-center justify-between gap-3 rounded-lg border border-teal-300 bg-teal-50 px-3 py-2">
+        <div className="flex items-center justify-between gap-3 rounded-lg border border-blue-300 bg-blue-50 px-3 py-2">
           <p className="min-w-0 text-sm text-slate-900">
             <span className="font-semibold">Selected: </span>
             <span className="break-all">{pendingFile ? pendingFile.name : selectedDoc.original_filename}</span>
@@ -95,7 +95,7 @@ export default function SourcePicker({ documents, selectedId, onSelect, onUpload
                 : `${documentTypeLabel(selectedDoc.document_type)}, ${formatKB(selectedDoc.size_bytes)}`}
             </span>
           </p>
-          <button type="button" className="shrink-0 rounded-md px-2 py-1 text-sm font-semibold text-teal-900 hover:bg-teal-100" onClick={handleClear}>
+          <button type="button" className="shrink-0 rounded-md px-2 py-1 text-sm font-semibold text-blue-900 hover:bg-blue-100" onClick={handleClear}>
             Clear
           </button>
         </div>
@@ -131,9 +131,9 @@ export default function SourcePicker({ documents, selectedId, onSelect, onUpload
               setOpen(false);
               fileInput.current?.click();
             }}
-            className="flex min-h-[48px] w-full items-center gap-3 px-4 py-3 text-left text-base font-semibold text-teal-900 hover:bg-teal-50"
+            className="flex min-h-[48px] w-full items-center gap-3 px-4 py-3 text-left text-base font-semibold text-blue-900 hover:bg-blue-50"
           >
-            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-teal-700 text-lg text-white" aria-hidden="true">+</span>
+            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-700 text-lg text-white" aria-hidden="true">+</span>
             Choose a file from this device
           </button>
 
@@ -145,7 +145,7 @@ export default function SourcePicker({ documents, selectedId, onSelect, onUpload
               aria-selected={doc.id === selectedId}
               onClick={() => handleSelectSaved(doc.id)}
               className={`flex min-h-[48px] w-full flex-col px-4 py-3 text-left hover:bg-slate-50 ${
-                doc.id === selectedId ? "bg-teal-50" : ""
+                doc.id === selectedId ? "bg-blue-50" : ""
               }`}
             >
               <span className="break-all font-medium text-slate-900">{doc.original_filename}</span>
@@ -177,7 +177,7 @@ export default function SourcePicker({ documents, selectedId, onSelect, onUpload
       {localError && <Alert>{localError}</Alert>}
 
       {pendingFile && (
-        <div className="space-y-3 rounded-lg border border-teal-300 bg-teal-50 p-4">
+        <div className="space-y-3 rounded-lg border border-blue-300 bg-blue-50 p-4">
           <p className="text-sm text-slate-800">
             <span className="font-semibold">{pendingFile.name}</span> ({formatKB(pendingFile.size)}) will be saved to your Vault and used for this copy.
           </p>

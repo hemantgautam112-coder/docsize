@@ -17,7 +17,7 @@ export function Alert({ type = "error", children }) {
 export function Spinner({ label }) {
   return (
     <span className="inline-flex items-center gap-2 text-sm text-slate-600">
-      <span className="h-4 w-4 animate-spin rounded-full border-2 border-teal-700 border-t-transparent" aria-hidden="true" />
+      <span className="h-4 w-4 animate-spin rounded-full border-2 border-blue-700 border-t-transparent" aria-hidden="true" />
       {label}
     </span>
   );
@@ -34,7 +34,7 @@ export function ProgressSteps({ steps, intervalMs = 1500 }) {
   return (
     <div className="space-y-3" aria-live="polite">
       <div className="h-2 w-full overflow-hidden rounded-full bg-slate-200">
-        <div className="h-full w-1/3 animate-pulse rounded-full bg-teal-600" />
+        <div className="h-full w-1/3 animate-pulse rounded-full bg-blue-600" />
       </div>
       <Spinner label={steps[index]} />
     </div>

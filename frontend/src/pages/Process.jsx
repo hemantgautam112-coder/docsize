@@ -87,6 +87,12 @@ export default function Process() {
     setHeight("");
   }, [selectedId]);
 
+  // When a result appears, scroll down to it, so the user sees the processed file straight away.
+  useEffect(() => {
+    if (!result) return;
+    document.getElementById("result-panel")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [result]);
+
   // Build a preview object URL for the processed file, and release it when it changes.
   useEffect(() => {
     if (!result) return undefined;
@@ -393,7 +399,7 @@ function ModeButton({ active, onClick, children }) {
       type="button"
       onClick={onClick}
       aria-pressed={active}
-      className={`btn ${active ? "bg-teal-700 text-white" : "border border-slate-300 bg-white text-slate-800 hover:bg-slate-100"}`}
+      className={`btn ${active ? "bg-blue-700 text-white" : "border border-slate-300 bg-white text-slate-800 hover:bg-slate-100"}`}
     >
       {children}
     </button>
@@ -434,7 +440,7 @@ function ResultPanel({ result, preview, isPdf, onDownload }) {
   const percent = Math.min(100, Math.round((actualKb / report.target_kb) * 100));
 
   return (
-    <section className="card space-y-5" aria-label="Processed result">
+    <section id="result-panel" className="card space-y-5" aria-label="Processed result">
       <div>
         <h2 className="text-lg font-semibold">Preview</h2>
         <p className="text-sm text-slate-600">Check the preview before you download.</p>
