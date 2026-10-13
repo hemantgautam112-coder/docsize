@@ -133,7 +133,7 @@ export default function SourcePicker({ documents, selectedId, onSelect, onUpload
             }}
             className="flex min-h-[48px] w-full items-center gap-3 px-4 py-3 text-left text-base font-semibold text-blue-900 hover:bg-blue-50"
           >
-            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-700 text-lg text-white" aria-hidden="true">+</span>
+            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-900 text-lg text-white" aria-hidden="true">+</span>
             Choose a file from this device
           </button>
 

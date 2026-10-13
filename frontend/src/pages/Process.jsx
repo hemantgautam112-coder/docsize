@@ -399,7 +399,7 @@ function ModeButton({ active, onClick, children }) {
       type="button"
       onClick={onClick}
       aria-pressed={active}
-      className={`btn ${active ? "bg-blue-700 text-white" : "border border-slate-300 bg-white text-slate-800 hover:bg-slate-100"}`}
+      className={`btn ${active ? "bg-blue-900 text-white" : "border border-slate-300 bg-white text-slate-800 hover:bg-slate-100"}`}
     >
       {children}
     </button>

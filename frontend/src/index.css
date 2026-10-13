@@ -7,7 +7,7 @@
     @apply inline-flex min-h-[48px] w-full items-center justify-center rounded-lg px-5 py-3 text-base font-semibold transition sm:w-auto;
   }
   .btn-primary {
-    @apply btn bg-blue-700 text-white hover:bg-blue-800 disabled:cursor-not-allowed disabled:bg-slate-400;
+    @apply btn bg-blue-900 text-white hover:bg-blue-950 disabled:cursor-not-allowed disabled:bg-slate-400;
   }
   .btn-secondary {
     @apply btn border border-slate-300 bg-white text-slate-800 hover:bg-slate-100 disabled:text-slate-400;
@@ -16,7 +16,7 @@
     @apply btn bg-red-700 text-white hover:bg-red-800 disabled:bg-slate-400;
   }
   .input {
-    @apply block min-h-[48px] w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-base focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-200;
+    @apply block min-h-[48px] w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-base focus:border-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-200;
   }
   .label {
     @apply mb-1 block text-sm font-medium text-slate-700;

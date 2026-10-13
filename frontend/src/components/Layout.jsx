@@ -5,12 +5,12 @@ import { STRINGS } from "../strings.js";
 
 const NAV_ITEMS = [
   { to: "/vault", label: "Vault" },
-  { to: "/process", label: "Process" },
+  { to: "/process", label: "Resizing" },
   { to: "/history", label: "History" },
 ];
 
 // Pages with wide tables use the full width of the screen.
-const WIDE_PAGES = ["/vault", "/history"];
+const WIDE_PAGES = ["/vault", "/process", "/history"];
 
 export default function Layout({ children }) {
   const { user, logout } = useAuth();
@@ -31,7 +31,7 @@ export default function Layout({ children }) {
     <div className="flex min-h-screen flex-col">
       <header className="border-b border-slate-200 bg-white">
         <div className={`mx-auto flex flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6 ${wide ? "max-w-none" : "max-w-5xl"}`}>
-          <Link to={user ? "/vault" : "/login"} className="text-xl font-bold text-blue-800">
+          <Link to={user ? "/vault" : "/login"} className="text-xl font-bold text-blue-950">
             {STRINGS.appName}
           </Link>
           {user && (
@@ -71,9 +71,9 @@ function Footer() {
         <p className="font-medium text-slate-800">{STRINGS.disclaimer}</p>
         <p>{STRINGS.sensitiveWarning}</p>
         <p className="flex flex-wrap gap-4">
-          <Link className="underline hover:text-blue-800" to="/privacy">Privacy</Link>
-          <Link className="underline hover:text-blue-800" to="/terms">Terms</Link>
-          <a className="underline hover:text-blue-800" href={`mailto:${STRINGS.supportEmail}`}>Contact: {STRINGS.supportEmail}</a>
+          <Link className="underline hover:text-blue-950" to="/privacy">Privacy</Link>
+          <Link className="underline hover:text-blue-950" to="/terms">Terms</Link>
+          <a className="underline hover:text-blue-950" href={`mailto:${STRINGS.supportEmail}`}>Contact: {STRINGS.supportEmail}</a>
         </p>
       </div>
     </footer>
