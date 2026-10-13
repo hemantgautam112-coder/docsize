@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /vault
+Disallow: /process
+Disallow: /history
+
+Sitemap: https://hdvault.in/sitemap.xml
