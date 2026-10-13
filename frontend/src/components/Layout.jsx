@@ -1,4 +1,5 @@
 import { Link, NavLink, useLocation } from "react-router-dom";
+import InstallButton from "./InstallButton.jsx";
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext.jsx";
 import { STRINGS } from "../strings.js";
@@ -49,6 +50,7 @@ export default function Layout({ children }) {
                   {item.label}
                 </NavLink>
               ))}
+              <InstallButton />
               <button type="button" className="btn-secondary min-h-[40px] px-3 py-2 text-sm" onClick={handleLogout} disabled={busy}>
                 Log out
               </button>
