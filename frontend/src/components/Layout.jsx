@@ -1,5 +1,6 @@
 import { Link, NavLink, useLocation } from "react-router-dom";
 import InstallButton from "./InstallButton.jsx";
+import Logo from "./Logo.jsx";
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext.jsx";
 import { STRINGS } from "../strings.js";
@@ -32,8 +33,8 @@ export default function Layout({ children }) {
     <div className="flex min-h-screen flex-col">
       <header className="border-b border-slate-200 bg-white">
         <div className={`mx-auto flex flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6 ${wide ? "max-w-none" : "max-w-5xl"}`}>
-          <Link to={user ? "/vault" : "/login"} className="text-xl font-bold text-blue-950">
-            {STRINGS.appName}
+          <Link to={user ? "/vault" : "/login"} aria-label={STRINGS.appName}>
+            <Logo />
           </Link>
           {user && (
             <nav aria-label="Main" className="flex w-full flex-wrap items-center gap-2 sm:w-auto">

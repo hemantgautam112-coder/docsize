@@ -73,6 +73,9 @@ def request_login_code(
     identifier = _normalize_or_422(body.identifier)
     if identifier_kind(identifier) == "mobile" and not settings.mobile_login_enabled:
         raise HTTPException(status_code=503, detail=MOBILE_COMING_SOON)
+    # Checked before any code is sent, so nobody can sign up without accepting the privacy policy.
+    if body.purpose == "signup" and not body.consent:
+        raise HTTPException(status_code=400, detail="Please accept the Privacy Policy and Terms before you sign up.")
     _check_purpose(db, identifier, body.purpose)
     try:
         request_otp(db, identifier, provider)

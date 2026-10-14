@@ -3,6 +3,7 @@ import { api } from "../api/endpoints.js";
 import { Alert, ConfirmButton, Spinner } from "../components/ui.jsx";
 import DocumentsTable from "../components/DocumentsTable.jsx";
 import TagUploadDialog from "../components/TagUploadDialog.jsx";
+import ScanUploadDialog from "../components/ScanUploadDialog.jsx";
 import PreviewDialog from "../components/PreviewDialog.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 import { saveBlob } from "../lib/download.js";
@@ -21,6 +22,8 @@ export default function Vault() {
   const [progress, setProgress] = useState(null); // { done, total }
   const [uploadNotice, setUploadNotice] = useState(null);
   const fileInput = useRef(null);
+  const cameraInput = useRef(null);
+  const [scanFile, setScanFile] = useState(null);
 
   const [busyId, setBusyId] = useState(null);
   const [previewDoc, setPreviewDoc] = useState(null);
@@ -56,6 +59,21 @@ export default function Vault() {
     setUploadNotice(null);
   }
 
+  // The Scan button opens the phone camera. The photo is checked here, then the user chooses how to upload it.
+  function handleScanPicked(event) {
+    const file = event.target.files?.[0] ?? null;
+    event.target.value = "";
+    if (!file) return;
+    const problem = validateFile(file);
+    if (problem) {
+      setFileProblems([`${file.name}: ${problem}`]);
+      return;
+    }
+    setFileProblems([]);
+    setUploadNotice(null);
+    setScanFile(file);
+  }
+
   // Uploads one file after another, so the progress count stays accurate and the server's limits are respected.
   async function uploadAll(items) {
     setReviewing(false);
@@ -63,9 +81,9 @@ export default function Vault() {
     const failed = [];
     for (let index = 0; index < items.length; index += 1) {
       setProgress({ done: index, total: items.length });
-      const { file, document_type } = items[index];
+      const { file, document_type, convert_to_pdf = false } = items[index];
       try {
-        const created = await api.uploadDocument(file, document_type);
+        const created = await api.uploadDocument(file, document_type, convert_to_pdf);
         setDocuments((current) => [created, ...current]);
       } catch (err) {
         failed.push(`${file.name} (${err.message})`);
@@ -145,9 +163,21 @@ export default function Vault() {
           accept=".jpg,.jpeg,.png,.pdf,image/jpeg,image/png,application/pdf"
           onChange={handleFilesPicked}
         />
+        <input
+          ref={cameraInput}
+          type="file"
+          accept="image/*"
+          capture="environment"
+          className="sr-only"
+          aria-label="Scan a document with the camera"
+          onChange={handleScanPicked}
+        />
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
           <button type="button" className="btn-secondary" onClick={() => fileInput.current?.click()} disabled={progress !== null}>
             Choose files
+          </button>
+          <button type="button" className="btn-secondary" onClick={() => cameraInput.current?.click()} disabled={progress !== null}>
+            Scan document
           </button>
           <span className="text-sm text-slate-600">
             {chosenFiles.length === 0 ? "No files chosen (JPG, PNG, or PDF, up to 10 MB each)" : `${chosenFiles.length} selected`}
@@ -210,6 +240,17 @@ export default function Vault() {
           files={chosenFiles}
           onCancel={() => setReviewing(false)}
           onConfirm={uploadAll}
+        />
+      )}
+
+      {scanFile && (
+        <ScanUploadDialog
+          file={scanFile}
+          onCancel={() => setScanFile(null)}
+          onConfirm={(item) => {
+            setScanFile(null);
+            uploadAll([item]);
+          }}
         />
       )}
 

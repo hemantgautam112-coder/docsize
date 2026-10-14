@@ -14,6 +14,7 @@ Purpose = Literal["login", "signup"]
 class OtpRequestIn(BaseModel):
     identifier: str = Field(min_length=3, max_length=254, description="Indian mobile number or email")
     purpose: Purpose = Field(default="login", description="signup needs a new account; login needs an existing one")
+    consent: bool = Field(default=False, description="Must be true to sign up. No code is sent without it.")
 
 
 class OtpVerifyIn(BaseModel):

@@ -237,3 +237,21 @@ def test_tag_can_be_changed_and_file_is_unchanged(make_user, photo_bytes):
     assert other.client.patch(
         f"/documents/{document['id']}", json={"document_type": "photo"}, headers=other.headers
     ).status_code == 403
+
+
+def test_scanned_photo_can_be_saved_as_pdf(make_user, photo_bytes):
+    user = make_user("9100000016")
+    user.sign_in()
+
+    response = user.client.post(
+        "/documents",
+        files={"file": ("scan.jpg", photo_bytes, "image/jpeg")},
+        data={"document_type": "marksheet_10", "convert_to_pdf": "true"},
+        headers=user.headers,
+    )
+
+    assert response.status_code == 201
+    body = response.json()
+    assert body["mime_type"] == "application/pdf"
+    assert body["page_count"] == 1
+    assert body["original_filename"] == "scan.jpg"

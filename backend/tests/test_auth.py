@@ -265,3 +265,21 @@ def test_health_check_accepts_get_and_head(make_user):
 
     assert user.client.get("/health").status_code == 200
     assert user.client.head("/health").status_code == 200
+
+
+def test_signup_sends_no_code_without_privacy_consent(make_user, otp_sink):
+    user = make_user("9876500020@example.com")
+
+    response = user.request_code(purpose="signup", consent=False)
+
+    assert response.status_code == 400
+    assert "Privacy Policy" in response.json()["detail"]
+    assert otp_sink.codes == {}
+
+
+def test_login_does_not_need_consent(make_user):
+    user = make_user("9876500021@example.com")
+    user.sign_in()
+    returning = make_user("9876500021@example.com")
+
+    assert returning.request_code(purpose="login", consent=False).status_code == 202

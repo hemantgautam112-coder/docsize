@@ -2,28 +2,47 @@ import { useEffect, useState } from "react";
 import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { api } from "../api/endpoints.js";
 import GoogleSignInButton from "../components/GoogleSignInButton.jsx";
+import Logo from "../components/Logo.jsx";
 import { Alert, Spinner } from "../components/ui.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 
-const TABS = {
-  login: {
-    heading: "Log in",
-    intro: "Log in to your existing account with a one-time code or Google.",
-    cta: "Send code",
-  },
-  signup: {
-    heading: "Create your account",
-    intro: "New here? Sign up with your mobile number or email, or with Google. You only need to do this once.",
-    cta: "Send code to sign up",
-  },
-};
+const CONSENT_MESSAGE = "Please accept the Privacy Policy and Terms before you sign up. Tick the box to continue.";
+
+/** Small document icons for the header and the footer decoration. Purely decorative. */
+function DocumentIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+      <path d="M7 3h7l5 5v13H7z" strokeLinejoin="round" />
+      <path d="M14 3v5h5M10 13h6M10 17h6" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function ScanIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+      <path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3" strokeLinecap="round" />
+      <path d="M4 12h16" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function MailIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+      <rect x="3" y="5" width="18" height="14" rx="2.5" />
+      <path d="m4 7 8 6 8-6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
 
 export default function Login() {
   const { user, loading, setUser } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [tab, setTab] = useState("login");
+  // New visitors land on Sign up. Existing users switch to Log in.
+  const [tab, setTab] = useState("signup");
   const [step, setStep] = useState("identifier");
   const [identifier, setIdentifier] = useState("");
   const [code, setCode] = useState("");
@@ -49,7 +68,6 @@ export default function Login() {
   }
 
   const isSignup = tab === "signup";
-  const copy = TABS[tab];
 
   function switchTab(next) {
     setTab(next);
@@ -67,12 +85,12 @@ export default function Login() {
     event.preventDefault();
     setError(null);
     if (isSignup && !consent) {
-      setError("Tick the box to agree to the Privacy Policy and Terms before you sign up.");
+      setError(CONSENT_MESSAGE);
       return;
     }
     setBusy(true);
     try {
-      const response = await api.requestOtp(identifier.trim(), tab);
+      const response = await api.requestOtp(identifier.trim(), tab, consent);
       setNotice(response.message);
       setStep("code");
     } catch (err) {
@@ -100,7 +118,7 @@ export default function Login() {
   async function handleGoogleCredential(credential) {
     setError(null);
     if (isSignup && !consent) {
-      setError("Tick the box to agree to the Privacy Policy and Terms before you sign up with Google.");
+      setError("Please accept the Privacy Policy and Terms before you sign up with Google. Tick the box to continue.");
       return;
     }
     setBusy(true);
@@ -116,121 +134,156 @@ export default function Login() {
   }
 
   return (
-    <div className="mx-auto max-w-md space-y-6">
-      <div role="tablist" aria-label="Log in or sign up" className="grid grid-cols-2 gap-2 rounded-xl bg-slate-200 p-1">
-        {["login", "signup"].map((name) => (
-          <button
-            key={name}
-            role="tab"
-            type="button"
-            aria-selected={tab === name}
-            onClick={() => switchTab(name)}
-            className={`min-h-[44px] rounded-lg text-base font-semibold ${
-              tab === name ? "bg-white text-blue-900 shadow-sm" : "text-slate-600"
-            }`}
-          >
-            {name === "login" ? "Log in" : "Sign up"}
-          </button>
-        ))}
-      </div>
+    <div className="space-y-6">
+      <header className="flex items-center justify-between">
+        <Logo />
+        <div className="flex items-center gap-2 text-blue-900" aria-hidden="true">
+          <span className="flex h-11 w-11 items-center justify-center rounded-full border border-blue-200 bg-white">
+            <DocumentIcon />
+          </span>
+          <span className="flex h-11 w-11 items-center justify-center rounded-full bg-blue-900 text-white">
+            <ScanIcon />
+          </span>
+        </div>
+      </header>
 
-      <section className="card space-y-2">
-        <h1 className="text-2xl font-bold text-slate-900">{copy.heading}</h1>
-        <p className="text-sm text-slate-600">{copy.intro}</p>
-      </section>
+      <section className="mx-auto w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+        <h1 className="font-display text-3xl font-bold leading-tight text-slate-900">
+          Let&apos;s start
+          <br />
+          <span className="text-blue-900">resizing</span>
+        </h1>
+        <p className="mt-2 text-sm text-slate-600">Please sign up or log in to continue.</p>
 
-      {step === "identifier" && (
-        <form className="card space-y-4" onSubmit={sendCode} aria-label={copy.heading}>
-          <div>
-            <label className="label" htmlFor="identifier">
-              {mobileEnabled ? "Mobile number or email" : "Email address"}
-            </label>
-            <input
-              id="identifier"
-              className="input"
-              type="text"
-              inputMode={mobileEnabled ? "text" : "email"}
-              autoComplete="username"
-              placeholder={mobileEnabled ? "98765 43210 or you@example.com" : "you@example.com"}
-              value={identifier}
-              onChange={(e) => setIdentifier(e.target.value)}
-              required
-            />
-            {!mobileEnabled && (
-              <p className="mt-2 text-xs text-slate-500">Mobile number login is coming soon. Please use your email address.</p>
+        <div role="tablist" aria-label="Sign up or log in" className="mt-6 grid grid-cols-2 gap-1 rounded-full bg-slate-100 p-1">
+          {[
+            { value: "signup", label: "Sign up" },
+            { value: "login", label: "Log in" },
+          ].map((option) => (
+            <button
+              key={option.value}
+              role="tab"
+              type="button"
+              aria-selected={tab === option.value}
+              onClick={() => switchTab(option.value)}
+              className={`min-h-[42px] rounded-full text-sm font-semibold transition ${
+                tab === option.value ? "bg-blue-900 text-white shadow-sm" : "text-slate-600 hover:text-slate-900"
+              }`}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+
+        {step === "identifier" && (
+          <form className="mt-6 space-y-4" onSubmit={sendCode} aria-label={isSignup ? "Sign up" : "Log in"}>
+            <div>
+              <label className="sr-only" htmlFor="identifier">
+                {mobileEnabled ? "Mobile number or email" : "Email address"}
+              </label>
+              <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 focus-within:border-blue-900 focus-within:ring-2 focus-within:ring-blue-200">
+                <span className="text-slate-400">
+                  <MailIcon />
+                </span>
+                <input
+                  id="identifier"
+                  className="min-h-[52px] w-full bg-transparent text-base text-slate-900 placeholder:text-slate-400 focus:outline-none"
+                  type="text"
+                  inputMode={mobileEnabled ? "text" : "email"}
+                  autoComplete="username"
+                  placeholder={mobileEnabled ? "Mobile number or email" : "Your email"}
+                  value={identifier}
+                  onChange={(e) => setIdentifier(e.target.value)}
+                  required
+                />
+              </div>
+              {!mobileEnabled && (
+                <p className="mt-2 text-xs text-slate-500">Mobile number login is coming soon. Please use your email address.</p>
+              )}
+            </div>
+
+            {isSignup && (
+              <label className="flex items-start gap-3 text-sm text-slate-700">
+                <input
+                  type="checkbox"
+                  className="mt-1 h-5 w-5 shrink-0 accent-blue-900"
+                  checked={consent}
+                  onChange={(e) => setConsent(e.target.checked)}
+                />
+                <span>
+                  I agree to the <Link className="font-medium text-blue-900 underline" to="/privacy">Privacy Policy</Link> and{" "}
+                  <Link className="font-medium text-blue-900 underline" to="/terms">Terms</Link>. I understand HDVault is not an official government site.
+                </span>
+              </label>
             )}
-          </div>
 
-          {isSignup && (
-            <label className="flex items-start gap-3 text-sm text-slate-700">
+            {error && <Alert>{error}</Alert>}
+
+            <button
+              type="submit"
+              className="btn-primary min-h-[52px] rounded-xl text-base"
+              disabled={busy || !identifier.trim() || (isSignup && !consent)}
+            >
+              {busy ? "Sending..." : isSignup ? "Sign Up" : "Log in"}
+            </button>
+          </form>
+        )}
+
+        {step === "code" && (
+          <form className="mt-6 space-y-4" onSubmit={verifyCode} aria-label="Enter your code">
+            {notice && <Alert type="info">{notice}</Alert>}
+            <div>
+              <label className="label" htmlFor="code">6-digit code</label>
               <input
-                type="checkbox"
-                className="mt-1 h-5 w-5 shrink-0"
-                checked={consent}
-                onChange={(e) => setConsent(e.target.checked)}
+                id="code"
+                className="input text-center text-2xl tracking-widest"
+                type="text"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                maxLength={6}
+                value={code}
+                onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
+                required
               />
-              <span>
-                I agree to the <Link className="underline" to="/privacy">Privacy Policy</Link> and{" "}
-                <Link className="underline" to="/terms">Terms</Link>. I understand HDVault is not an official government site.
-              </span>
-            </label>
-          )}
+              <p className="mt-2 text-xs text-slate-500">
+                The code expires in 5 minutes and allows 3 attempts. During local development, the code is printed in the backend server console.
+              </p>
+            </div>
 
-          {error && <Alert>{error}</Alert>}
+            {error && <Alert>{error}</Alert>}
 
-          <button type="submit" className="btn-primary" disabled={busy || !identifier.trim() || (isSignup && !consent)}>
-            {busy ? "Sending..." : copy.cta}
-          </button>
-        </form>
-      )}
+            <button type="submit" className="btn-primary min-h-[52px] rounded-xl text-base" disabled={busy || code.length !== 6}>
+              {busy ? "Checking..." : isSignup ? "Verify and create account" : "Verify and log in"}
+            </button>
+            <button type="button" className="btn-secondary rounded-xl" onClick={() => switchTab(tab)}>
+              Change email
+            </button>
+          </form>
+        )}
 
-      {step === "code" && (
-        <form className="card space-y-4" onSubmit={verifyCode} aria-label="Enter your code">
-          {notice && <Alert type="info">{notice}</Alert>}
-          <div>
-            <label className="label" htmlFor="code">6-digit code</label>
-            <input
-              id="code"
-              className="input text-center text-2xl tracking-widest"
-              type="text"
-              inputMode="numeric"
-              autoComplete="one-time-code"
-              maxLength={6}
-              value={code}
-              onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
-              required
-            />
-            <p className="mt-2 text-xs text-slate-500">
-              The code expires in 5 minutes and allows 3 attempts. During local development, the code is printed in the backend server console.
-            </p>
-          </div>
+        <div className="my-6 flex items-center gap-3 text-xs uppercase tracking-wide text-slate-400" aria-hidden="true">
+          <span className="h-px flex-1 bg-slate-200" />
+          or
+          <span className="h-px flex-1 bg-slate-200" />
+        </div>
 
-          {error && <Alert>{error}</Alert>}
-
-          <button type="submit" className="btn-primary" disabled={busy || code.length !== 6}>
-            {busy ? "Checking..." : isSignup ? "Verify and create account" : "Verify and log in"}
-          </button>
-          <button type="button" className="btn-secondary" onClick={() => switchTab(tab)}>
-            Change number or email
-          </button>
-        </form>
-      )}
-
-      <div className="flex items-center gap-3 text-xs uppercase tracking-wide text-slate-500" aria-hidden="true">
-        <span className="h-px flex-1 bg-slate-300" />
-        or
-        <span className="h-px flex-1 bg-slate-300" />
-      </div>
-
-      <section className="card space-y-3">
-        <p className="text-sm font-medium text-slate-700">{isSignup ? "Sign up with Google" : "Log in with Google"}</p>
         <GoogleSignInButton onCredential={handleGoogleCredential} />
-        <p className="text-xs text-slate-500">
-          {isSignup
-            ? "Google shares only your verified email address with HDVault."
-            : "Use the Google account you signed up with. If you have not signed up yet, use the Sign up tab first."}
+
+        <p className="mt-6 text-center text-sm text-slate-600">
+          {isSignup ? "Already have an account? " : "New here? "}
+          <button
+            type="button"
+            className="font-semibold text-blue-900 underline"
+            onClick={() => switchTab(isSignup ? "login" : "signup")}
+          >
+            {isSignup ? "Log in" : "Sign up"}
+          </button>
         </p>
       </section>
+
+      <p className="text-center text-xs text-slate-500">
+        HDVault is an independent tool, not affiliated with any government body.
+      </p>
     </div>
   );
 }

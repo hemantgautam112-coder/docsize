@@ -6,8 +6,8 @@ import { request } from "./client.js";
 export const api = {
   me: () => request("/auth/me"),
   authOptions: () => request("/auth/options"),
-  requestOtp: (identifier, purpose) =>
-    request("/auth/request-otp", { method: "POST", json: { identifier, purpose } }),
+  requestOtp: (identifier, purpose, consent = false) =>
+    request("/auth/request-otp", { method: "POST", json: { identifier, purpose, consent } }),
   verifyOtp: (identifier, code, purpose, consent) =>
     request("/auth/verify-otp", { method: "POST", json: { identifier, code, purpose, consent } }),
   googleSignIn: (credential, purpose, consent) =>
@@ -19,10 +19,11 @@ export const api = {
     request(`/profiles${documentType ? `?document_type=${encodeURIComponent(documentType)}` : ""}`),
 
   listDocuments: () => request("/documents"),
-  uploadDocument: (file, documentType) => {
+  uploadDocument: (file, documentType, convertToPdf = false) => {
     const form = new FormData();
     form.append("file", file);
     form.append("document_type", documentType);
+    form.append("convert_to_pdf", convertToPdf ? "true" : "false");
     return request("/documents", { method: "POST", form });
   },
   updateDocumentTag: (id, documentType) =>

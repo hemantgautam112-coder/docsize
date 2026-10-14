@@ -15,6 +15,7 @@ from sqlalchemy.orm import Session
 from app.config import settings
 from app.db import utcnow
 from app.models import OriginalDocument, User
+from app.services.image_engine import _normalize
 from app.services.storage import get_storage, sha256_hex
 
 _PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
@@ -87,6 +88,18 @@ def _inspect_pdf(data: bytes) -> UploadInfo:
     if page_count > settings.max_pdf_pages:
         raise UnsupportedFileError(f"PDFs can have at most {settings.max_pdf_pages} pages.")
     return UploadInfo("application/pdf", "pdf", None, None, page_count)
+
+
+def image_to_pdf(data: bytes) -> bytes:
+    """Turns a scanned photo into a one-page PDF. Orientation is fixed, transparency is flattened onto white,
+    and no metadata is copied into the PDF."""
+    try:
+        image = _normalize(data)
+    except Exception as exc:
+        raise UnsupportedFileError("This picture could not be read. Please scan it again.") from exc
+    buffer = BytesIO()
+    image.save(buffer, format="PDF", resolution=200, quality=90)
+    return buffer.getvalue()
 
 
 def sanitize_filename(name: str | None) -> str:

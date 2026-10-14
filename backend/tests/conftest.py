@@ -52,10 +52,10 @@ class ApiUser:
     def headers(self) -> dict:
         return {"X-CSRF-Token": self.csrf}
 
-    def request_code(self, purpose: str = "signup"):
+    def request_code(self, purpose: str = "signup", consent: bool = True):
         return self.client.post(
             "/auth/request-otp",
-            json={"identifier": self.identifier, "purpose": purpose},
+            json={"identifier": self.identifier, "purpose": purpose, "consent": consent},
             headers=self.headers,
         )
 

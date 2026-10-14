@@ -29,6 +29,7 @@ from app.services.documents import (
     read_verified_original,
 )
 from app.services.processing import build_parameters, resolve_spec, run_processing
+from app.services.documents import image_to_pdf
 from app.services.processing_common import ProcessingError
 
 router = APIRouter(prefix="/documents", tags=["documents"])
@@ -49,6 +50,7 @@ _OVERSIZE_PROBE_BYTES = 1  # read one byte past the limit so oversize files are 
 async def upload_document(
     file: UploadFile = File(...),
     document_type: DocumentType = Form(...),
+    convert_to_pdf: bool = Form(False),
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> OriginalDocument:
@@ -62,6 +64,9 @@ async def upload_document(
         raise HTTPException(status_code=422, detail="The file is empty.")
 
     try:
+        if convert_to_pdf:
+            # A scanned photo saved as a one-page PDF (for example, from the Scan button).
+            data = await run_in_threadpool(image_to_pdf, data)
         doc = await run_in_threadpool(
             create_original, db, user, document_type.value, file.filename or "upload", data
         )
