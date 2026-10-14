@@ -26,6 +26,11 @@ function RequireAuth({ children }) {
 }
 
 export default function App() {
+  const location = useLocation();
+  // The login page has its own full-screen design, so it is shown without the usual header and footer.
+  if (location.pathname === "/login") {
+    return <Login />;
+  }
   return (
     <Layout>
       <Routes>

@@ -3,15 +3,25 @@ import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { api } from "../api/endpoints.js";
 import GoogleSignInButton from "../components/GoogleSignInButton.jsx";
 import Logo from "../components/Logo.jsx";
-import { Alert, Spinner } from "../components/ui.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
+import { Spinner } from "../components/ui.jsx";
 
 const CONSENT_MESSAGE = "Please accept the Privacy Policy and Terms before you sign up. Tick the box to continue.";
+const GOOGLE_CONSENT_MESSAGE = "Please accept the Privacy Policy and Terms before you sign up with Google. Tick the box, then try again.";
 
-/** Small document icons for the header and the footer decoration. Purely decorative. */
-function DocumentIcon() {
+/* Icons used on the page, drawn to match the reference design. */
+function MailIcon() {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#696D70" strokeWidth="1.8" aria-hidden="true">
+      <rect x="3" y="5" width="18" height="14" rx="3" />
+      <path d="m4.5 7.5 7.5 5.5 7.5-5.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function DocumentIcon({ color }) {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" aria-hidden="true">
       <path d="M7 3h7l5 5v13H7z" strokeLinejoin="round" />
       <path d="M14 3v5h5M10 13h6M10 17h6" strokeLinecap="round" />
     </svg>
@@ -20,18 +30,9 @@ function DocumentIcon() {
 
 function ScanIcon() {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="1.8" aria-hidden="true">
       <path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3" strokeLinecap="round" />
       <path d="M4 12h16" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function MailIcon() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
-      <rect x="3" y="5" width="18" height="14" rx="2.5" />
-      <path d="m4 7 8 6 8-6" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
@@ -49,6 +50,8 @@ export default function Login() {
   const [consent, setConsent] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
+  const [googleError, setGoogleError] = useState(null);
+  const [consentHighlight, setConsentHighlight] = useState(false);
   const [notice, setNotice] = useState(null);
   // Assume mobile is on until the server says otherwise, so a failed options call doesn't hide it.
   const [mobileEnabled, setMobileEnabled] = useState(true);
@@ -74,6 +77,8 @@ export default function Login() {
     setStep("identifier");
     setCode("");
     setError(null);
+    setGoogleError(null);
+    setConsentHighlight(false);
     setNotice(null);
   }
 
@@ -81,11 +86,16 @@ export default function Login() {
     navigate(location.state?.from ?? "/vault", { replace: true });
   }
 
+  function refuseWithoutConsent(message, setMessage) {
+    setMessage(message);
+    setConsentHighlight(true);
+  }
+
   async function sendCode(event) {
     event.preventDefault();
     setError(null);
     if (isSignup && !consent) {
-      setError(CONSENT_MESSAGE);
+      refuseWithoutConsent(CONSENT_MESSAGE, setError);
       return;
     }
     setBusy(true);
@@ -116,9 +126,9 @@ export default function Login() {
   }
 
   async function handleGoogleCredential(credential) {
-    setError(null);
+    setGoogleError(null);
     if (isSignup && !consent) {
-      setError("Please accept the Privacy Policy and Terms before you sign up with Google. Tick the box to continue.");
+      refuseWithoutConsent(GOOGLE_CONSENT_MESSAGE, setGoogleError);
       return;
     }
     setBusy(true);
@@ -127,163 +137,200 @@ export default function Login() {
       setUser(signedIn);
       goToNextPage();
     } catch (err) {
-      setError(err.message);
+      setGoogleError(err.message);
     } finally {
       setBusy(false);
     }
   }
 
+  const heading = isSignup ? "Sign Up" : "Login";
+
   return (
-    <div className="space-y-6">
-      <header className="flex items-center justify-between">
-        <Logo />
-        <div className="flex items-center gap-2 text-blue-900" aria-hidden="true">
-          <span className="flex h-11 w-11 items-center justify-center rounded-full border border-blue-200 bg-white">
-            <DocumentIcon />
-          </span>
-          <span className="flex h-11 w-11 items-center justify-center rounded-full bg-blue-900 text-white">
-            <ScanIcon />
-          </span>
-        </div>
-      </header>
+    <div className="min-h-screen bg-[#E3E3E3] sm:p-6">
+      <div className="mx-auto flex min-h-screen max-w-[1120px] flex-col rounded-none bg-[#F7F5F4] px-5 py-6 sm:min-h-[calc(100vh-3rem)] sm:rounded-[28px] sm:px-10 sm:py-8">
+        <header className="flex items-center justify-between">
+          <Logo />
+          <div className="flex items-center gap-3" aria-hidden="true">
+            <span className="flex h-12 w-12 items-center justify-center rounded-full border border-[#A3A7AF] bg-transparent">
+              <DocumentIcon color="#222222" />
+            </span>
+            <span className="flex h-12 w-12 items-center justify-center rounded-full bg-[#222222]">
+              <ScanIcon />
+            </span>
+          </div>
+        </header>
 
-      <section className="mx-auto w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-        <h1 className="font-display text-3xl font-bold leading-tight text-slate-900">
-          Let&apos;s start
-          <br />
-          <span className="text-blue-900">resizing</span>
-        </h1>
-        <p className="mt-2 text-sm text-slate-600">Please sign up or log in to continue.</p>
+        <main className="relative mx-auto flex w-full flex-1 items-center justify-center py-8">
+          <img
+            src="/images/login-left.png"
+            alt=""
+            aria-hidden="true"
+            className="pointer-events-none absolute bottom-6 left-0 hidden w-[330px] select-none md:block"
+          />
+          <img
+            src="/images/login-right.png"
+            alt=""
+            aria-hidden="true"
+            className="pointer-events-none absolute bottom-6 right-0 hidden w-[340px] select-none md:block"
+          />
 
-        <div role="tablist" aria-label="Sign up or log in" className="mt-6 grid grid-cols-2 gap-1 rounded-full bg-slate-100 p-1">
-          {[
-            { value: "signup", label: "Sign up" },
-            { value: "login", label: "Log in" },
-          ].map((option) => (
-            <button
-              key={option.value}
-              role="tab"
-              type="button"
-              aria-selected={tab === option.value}
-              onClick={() => switchTab(option.value)}
-              className={`min-h-[42px] rounded-full text-sm font-semibold transition ${
-                tab === option.value ? "bg-blue-900 text-white shadow-sm" : "text-slate-600 hover:text-slate-900"
-              }`}
-            >
-              {option.label}
-            </button>
-          ))}
-        </div>
+          <section className="relative z-10 w-full max-w-[460px] rounded-[22px] bg-white px-7 py-9 shadow-[0_6px_30px_rgba(0,0,0,0.04)] sm:px-10">
+            <h1 className="font-display text-[32px] font-bold leading-[1.15] text-[#323232]">
+              Lets
+              <br />
+              Start Resizing
+            </h1>
+            <p className="mt-2 text-[15px] text-[#696D70]">Please login or sign up to continue</p>
 
-        {step === "identifier" && (
-          <form className="mt-6 space-y-4" onSubmit={sendCode} aria-label={isSignup ? "Sign up" : "Log in"}>
-            <div>
-              <label className="sr-only" htmlFor="identifier">
-                {mobileEnabled ? "Mobile number or email" : "Email address"}
-              </label>
-              <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 focus-within:border-blue-900 focus-within:ring-2 focus-within:ring-blue-200">
-                <span className="text-slate-400">
-                  <MailIcon />
-                </span>
-                <input
-                  id="identifier"
-                  className="min-h-[52px] w-full bg-transparent text-base text-slate-900 placeholder:text-slate-400 focus:outline-none"
-                  type="text"
-                  inputMode={mobileEnabled ? "text" : "email"}
-                  autoComplete="username"
-                  placeholder={mobileEnabled ? "Mobile number or email" : "Your email"}
-                  value={identifier}
-                  onChange={(e) => setIdentifier(e.target.value)}
-                  required
-                />
-              </div>
-              {!mobileEnabled && (
-                <p className="mt-2 text-xs text-slate-500">Mobile number login is coming soon. Please use your email address.</p>
-              )}
-            </div>
+            {step === "identifier" && (
+              <form className="mt-7 space-y-4" onSubmit={sendCode} aria-label={heading}>
+                <div>
+                  <label className="sr-only" htmlFor="identifier">
+                    {mobileEnabled ? "Mobile number or email" : "Email address"}
+                  </label>
+                  <div className="flex h-[54px] items-center gap-3 rounded-xl border border-[#E8E6E7] bg-[#F7F5F4] px-4 focus-within:border-[#ED7631] focus-within:ring-2 focus-within:ring-[#ED7631]/20">
+                    <MailIcon />
+                    <input
+                      id="identifier"
+                      className="h-full w-full bg-transparent text-[16px] text-[#323232] placeholder:text-[#8F9396] focus:outline-none"
+                      type="text"
+                      inputMode={mobileEnabled ? "text" : "email"}
+                      autoComplete="username"
+                      placeholder={mobileEnabled ? "Your Email or Mobile" : "Your Email"}
+                      value={identifier}
+                      onChange={(e) => setIdentifier(e.target.value)}
+                      required
+                    />
+                  </div>
+                  {!mobileEnabled && (
+                    <p className="mt-2 text-xs text-[#696D70]">Mobile number login is coming soon. Please use your email address.</p>
+                  )}
+                </div>
 
-            {isSignup && (
-              <label className="flex items-start gap-3 text-sm text-slate-700">
-                <input
-                  type="checkbox"
-                  className="mt-1 h-5 w-5 shrink-0 accent-blue-900"
-                  checked={consent}
-                  onChange={(e) => setConsent(e.target.checked)}
-                />
-                <span>
-                  I agree to the <Link className="font-medium text-blue-900 underline" to="/privacy">Privacy Policy</Link> and{" "}
-                  <Link className="font-medium text-blue-900 underline" to="/terms">Terms</Link>. I understand HDVault is not an official government site.
-                </span>
-              </label>
+                {isSignup && (
+                  <label
+                    className={`flex items-start gap-3 rounded-xl p-2 text-[13px] leading-snug text-[#525659] ${
+                      consentHighlight && !consent ? "ring-2 ring-[#E5484D]" : ""
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      className="mt-0.5 h-4 w-4 shrink-0 accent-[#ED7631]"
+                      checked={consent}
+                      onChange={(e) => {
+                        setConsent(e.target.checked);
+                        if (e.target.checked) {
+                          setConsentHighlight(false);
+                          setError(null);
+                          setGoogleError(null);
+                        }
+                      }}
+                    />
+                    <span>
+                      I agree to the <Link className="font-semibold text-[#323232] underline" to="/privacy">Privacy Policy</Link> and{" "}
+                      <Link className="font-semibold text-[#323232] underline" to="/terms">Terms</Link>. HDVault is not an official government site.
+                    </span>
+                  </label>
+                )}
+
+                {error && (
+                  <p role="alert" className="rounded-xl border border-[#E5484D]/30 bg-[#FDECEC] px-4 py-3 text-sm text-[#B42318]">
+                    {error}
+                  </p>
+                )}
+
+                <button
+                  type="submit"
+                  className="flex h-[54px] w-full items-center justify-center rounded-xl bg-[#ED7631] text-[16px] font-semibold text-white transition hover:bg-[#E0692A] disabled:cursor-not-allowed disabled:opacity-60"
+                  disabled={busy || !identifier.trim()}
+                >
+                  {busy ? "Sending..." : isSignup ? "Sign Up" : "Login"}
+                </button>
+              </form>
             )}
 
-            {error && <Alert>{error}</Alert>}
+            {step === "code" && (
+              <form className="mt-7 space-y-4" onSubmit={verifyCode} aria-label="Enter your code">
+                {notice && <p className="rounded-xl bg-[#F7F5F4] px-4 py-3 text-sm text-[#525659]">{notice}</p>}
+                <label className="sr-only" htmlFor="code">6-digit code</label>
+                <input
+                  id="code"
+                  className="h-[54px] w-full rounded-xl border border-[#E8E6E7] bg-[#F7F5F4] text-center font-display text-2xl tracking-[0.4em] text-[#323232] focus:border-[#ED7631] focus:outline-none focus:ring-2 focus:ring-[#ED7631]/20"
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  maxLength={6}
+                  placeholder="000000"
+                  value={code}
+                  onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
+                  required
+                />
+                <p className="text-xs text-[#696D70]">
+                  The code expires in 5 minutes and allows 3 attempts. During local development, the code is printed in the backend server console.
+                </p>
 
-            <button
-              type="submit"
-              className="btn-primary min-h-[52px] rounded-xl text-base"
-              disabled={busy || !identifier.trim() || (isSignup && !consent)}
-            >
-              {busy ? "Sending..." : isSignup ? "Sign Up" : "Log in"}
-            </button>
-          </form>
-        )}
+                {error && (
+                  <p role="alert" className="rounded-xl border border-[#E5484D]/30 bg-[#FDECEC] px-4 py-3 text-sm text-[#B42318]">
+                    {error}
+                  </p>
+                )}
 
-        {step === "code" && (
-          <form className="mt-6 space-y-4" onSubmit={verifyCode} aria-label="Enter your code">
-            {notice && <Alert type="info">{notice}</Alert>}
-            <div>
-              <label className="label" htmlFor="code">6-digit code</label>
-              <input
-                id="code"
-                className="input text-center text-2xl tracking-widest"
-                type="text"
-                inputMode="numeric"
-                autoComplete="one-time-code"
-                maxLength={6}
-                value={code}
-                onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
-                required
-              />
-              <p className="mt-2 text-xs text-slate-500">
-                The code expires in 5 minutes and allows 3 attempts. During local development, the code is printed in the backend server console.
-              </p>
+                <button
+                  type="submit"
+                  className="flex h-[54px] w-full items-center justify-center rounded-xl bg-[#ED7631] text-[16px] font-semibold text-white transition hover:bg-[#E0692A] disabled:cursor-not-allowed disabled:opacity-60"
+                  disabled={busy || code.length !== 6}
+                >
+                  {busy ? "Checking..." : isSignup ? "Verify and create account" : "Verify and login"}
+                </button>
+                <button type="button" className="w-full text-sm font-semibold text-[#323232] underline" onClick={() => switchTab(tab)}>
+                  Change email
+                </button>
+              </form>
+            )}
+
+            <div className="my-6 flex items-center gap-3 text-xs uppercase tracking-wide text-[#A3A7AF]" aria-hidden="true">
+              <span className="h-px flex-1 bg-[#E8E6E7]" />
+              or
+              <span className="h-px flex-1 bg-[#E8E6E7]" />
             </div>
 
-            {error && <Alert>{error}</Alert>}
+            <div className="relative">
+              <div className="flex justify-center rounded-xl border border-[#E8E6E7] bg-white py-1">
+                <GoogleSignInButton onCredential={handleGoogleCredential} />
+              </div>
+              {/* Until the user accepts the privacy policy, clicks on Google show the warning instead of opening Google. */}
+              {isSignup && !consent && (
+                <button
+                  type="button"
+                  aria-label="Accept the Privacy Policy first to sign up with Google"
+                  className="absolute inset-0 z-10 cursor-pointer rounded-xl bg-white/50"
+                  onClick={() => refuseWithoutConsent(GOOGLE_CONSENT_MESSAGE, setGoogleError)}
+                />
+              )}
+            </div>
+            {googleError && (
+              <p role="alert" className="mt-3 rounded-xl border border-[#E5484D]/30 bg-[#FDECEC] px-4 py-3 text-sm text-[#B42318]">
+                {googleError}
+              </p>
+            )}
 
-            <button type="submit" className="btn-primary min-h-[52px] rounded-xl text-base" disabled={busy || code.length !== 6}>
-              {busy ? "Checking..." : isSignup ? "Verify and create account" : "Verify and log in"}
-            </button>
-            <button type="button" className="btn-secondary rounded-xl" onClick={() => switchTab(tab)}>
-              Change email
-            </button>
-          </form>
-        )}
+            <p className="mt-7 text-center text-[14px] text-[#696D70]">
+              {isSignup ? "Already Have An Account? " : "New Here? "}
+              <button
+                type="button"
+                className="font-semibold text-[#323232] underline"
+                onClick={() => switchTab(isSignup ? "login" : "signup")}
+              >
+                {isSignup ? "Login" : "Sign Up"}
+              </button>
+            </p>
+          </section>
+        </main>
 
-        <div className="my-6 flex items-center gap-3 text-xs uppercase tracking-wide text-slate-400" aria-hidden="true">
-          <span className="h-px flex-1 bg-slate-200" />
-          or
-          <span className="h-px flex-1 bg-slate-200" />
-        </div>
-
-        <GoogleSignInButton onCredential={handleGoogleCredential} />
-
-        <p className="mt-6 text-center text-sm text-slate-600">
-          {isSignup ? "Already have an account? " : "New here? "}
-          <button
-            type="button"
-            className="font-semibold text-blue-900 underline"
-            onClick={() => switchTab(isSignup ? "login" : "signup")}
-          >
-            {isSignup ? "Log in" : "Sign up"}
-          </button>
-        </p>
-      </section>
-
-      <p className="text-center text-xs text-slate-500">
-        HDVault is an independent tool, not affiliated with any government body.
-      </p>
+        <footer className="pt-4 text-center text-xs text-[#696D70]">
+          HDVault is an independent tool. It is not affiliated with any government body or exam conducting authority.
+        </footer>
+      </div>
     </div>
   );
 }

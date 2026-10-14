@@ -4,7 +4,7 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        display: ["Poppins", "system-ui", "sans-serif"],
+        display: ["Montserrat", "system-ui", "sans-serif"],
       },
     },
   },
