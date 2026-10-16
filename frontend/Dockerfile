@@ -12,6 +12,9 @@ ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
 # Google sign-in client ID. It is public, but Vite needs it at build time. Empty disables the button.
 ARG VITE_GOOGLE_CLIENT_ID=
 ENV VITE_GOOGLE_CLIENT_ID=$VITE_GOOGLE_CLIENT_ID
+# Cloudflare Turnstile site key (public). Empty skips the security check, which is for development only.
+ARG VITE_TURNSTILE_SITE_KEY=
+ENV VITE_TURNSTILE_SITE_KEY=$VITE_TURNSTILE_SITE_KEY
 RUN npm run build
 
 FROM caddy:2-alpine

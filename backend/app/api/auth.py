@@ -17,10 +17,12 @@ from app.models import User
 from app.schemas import AuthOptionsOut, CsrfOut, GoogleLoginIn, MessageOut, OtpRequestIn, OtpVerifyIn, UserOut
 from app.security import clear_session_cookie, ensure_csrf_cookie, set_session_cookie
 from app.services.accounts import delete_account
+from app.services.captcha import verify_captcha
 from app.services.google_auth import GoogleAuthError, GoogleNotConfiguredError, verify_google_credential
 from app.services.otp import (
     InvalidIdentifierError,
     OtpInvalidError,
+    OtpLockedError,
     OtpProvider,
     OtpRateLimitedError,
     get_otp_provider,
@@ -34,8 +36,6 @@ from app.services.otp import (
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 _OTP_WINDOW_SECONDS = settings.otp_request_window_minutes * 60
-_NO_ACCOUNT = "No account found for this {kind}. Sign up first."
-_ALREADY_REGISTERED = "An account already exists for this {kind}. Log in instead."
 
 
 @router.get("/csrf", response_model=CsrfOut)
@@ -45,6 +45,10 @@ def get_csrf_token(request: Request, response: Response) -> CsrfOut:
 
 
 MOBILE_COMING_SOON = "Mobile login is coming soon. Please use your email."
+# The same message for "not registered" and "wrong details", so the answer never reveals who has an account.
+GENERIC_SIGNIN_MESSAGE = (
+    "We could not sign you in with these details. If you are new here, choose Sign Up and accept the Privacy Policy."
+)
 
 
 @router.get("/options", response_model=AuthOptionsOut)
@@ -67,6 +71,7 @@ def auth_options() -> AuthOptionsOut:
 )
 def request_login_code(
     body: OtpRequestIn,
+    request: Request,
     db: Session = Depends(get_db),
     provider: OtpProvider = Depends(get_otp_provider),
 ) -> MessageOut:
@@ -76,7 +81,9 @@ def request_login_code(
     # Checked before any code is sent, so nobody can sign up without accepting the privacy policy.
     if body.purpose == "signup" and not body.consent:
         raise HTTPException(status_code=400, detail="Please accept the Privacy Policy and Terms before you sign up.")
-    _check_purpose(db, identifier, body.purpose)
+    client_ip = request.client.host if request.client else "unknown"
+    if not verify_captcha(body.captcha_token, client_ip):
+        raise HTTPException(status_code=400, detail="Please complete the security check and try again.")
     try:
         request_otp(db, identifier, provider)
     except OtpRateLimitedError as exc:
@@ -99,19 +106,18 @@ def verify_login_code(body: OtpVerifyIn, response: Response, db: Session = Depen
         identifier = verify_otp(db, body.identifier, body.code)
     except InvalidIdentifierError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
+    except OtpLockedError as exc:
+        raise HTTPException(status_code=429, detail=str(exc)) from exc
     except OtpInvalidError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     user = _find_user(db, identifier)
-    kind = identifier_kind(identifier)
-    if body.purpose == "signup":
-        if user is not None:
-            raise HTTPException(status_code=409, detail=_ALREADY_REGISTERED.format(kind=kind))
-        if not body.consent:
-            raise HTTPException(status_code=400, detail="Please accept the privacy policy to create your account.")
+    if user is None:
+        # A new account is created only from Sign Up, with the Privacy Policy accepted. Otherwise the same message as a wrong code.
+        if body.purpose != "signup" or not body.consent:
+            raise HTTPException(status_code=400, detail=GENERIC_SIGNIN_MESSAGE)
+        kind = identifier_kind(identifier)
         user = _create_user(db, mobile=identifier if kind == "mobile" else None, email=identifier if kind == "email" else None)
-    elif user is None:
-        raise HTTPException(status_code=404, detail=_NO_ACCOUNT.format(kind=kind))
 
     return _sign_in(response, db, user)
 
@@ -135,14 +141,10 @@ def google_sign_in(body: GoogleLoginIn, response: Response, db: Session = Depend
     user = db.scalar(select(User).where(User.google_sub == identity.sub)) or db.scalar(
         select(User).where(User.email == identity.email)
     )
-    if body.purpose == "signup":
-        if user is not None:
-            raise HTTPException(status_code=409, detail=_ALREADY_REGISTERED.format(kind="Google account"))
-        if not body.consent:
-            raise HTTPException(status_code=400, detail="Please accept the privacy policy to create your account.")
+    if user is None:
+        if body.purpose != "signup" or not body.consent:
+            raise HTTPException(status_code=400, detail=GENERIC_SIGNIN_MESSAGE)
         user = _create_user(db, email=identity.email, google_sub=identity.sub)
-    elif user is None:
-        raise HTTPException(status_code=404, detail=_NO_ACCOUNT.format(kind="Google account"))
     elif user.google_sub is None:
         user.google_sub = identity.sub  # link Google to an account that already exists with this email
         db.commit()
@@ -175,14 +177,6 @@ def _normalize_or_422(raw: str) -> str:
     except InvalidIdentifierError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
 
-
-def _check_purpose(db: Session, identifier: str, purpose: str) -> None:
-    user = _find_user(db, identifier)
-    kind = identifier_kind(identifier)
-    if purpose == "signup" and user is not None:
-        raise HTTPException(status_code=409, detail=_ALREADY_REGISTERED.format(kind=kind))
-    if purpose == "login" and user is None:
-        raise HTTPException(status_code=404, detail=_NO_ACCOUNT.format(kind=kind))
 
 
 def _find_user(db: Session, identifier: str) -> User | None:

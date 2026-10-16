@@ -18,3 +18,6 @@ export const MAX_UPLOAD_MB = 10;
 
 /** OAuth client ID for Google sign-in. Empty means the Google button shows a setup message. */
 export const GOOGLE_CLIENT_ID = import.meta.env?.VITE_GOOGLE_CLIENT_ID || "";
+
+/** Public Cloudflare Turnstile site key. Empty means the security check is skipped (development only). */
+export const TURNSTILE_SITE_KEY = import.meta.env?.VITE_TURNSTILE_SITE_KEY || "";

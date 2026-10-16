@@ -10,6 +10,8 @@ import { saveBlob } from "../lib/download.js";
 import { validateFile } from "../lib/format.js";
 import { STRINGS } from "../strings.js";
 
+const MAX_FILES_AT_A_TIME = 5;
+
 export default function Vault() {
   const { logout } = useAuth();
   const [documents, setDocuments] = useState([]);
@@ -47,6 +49,11 @@ export default function Vault() {
   function handleFilesPicked(event) {
     const picked = Array.from(event.target.files ?? []);
     event.target.value = ""; // allow picking the same files again later
+    if (picked.length > MAX_FILES_AT_A_TIME) {
+      setChosenFiles([]);
+      setFileProblems([`You can upload up to ${MAX_FILES_AT_A_TIME} files at a time. Please pick ${MAX_FILES_AT_A_TIME} or fewer.`]);
+      return;
+    }
     const valid = [];
     const problems = [];
     for (const file of picked) {

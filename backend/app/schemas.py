@@ -15,6 +15,7 @@ class OtpRequestIn(BaseModel):
     identifier: str = Field(min_length=3, max_length=254, description="Indian mobile number or email")
     purpose: Purpose = Field(default="login", description="signup needs a new account; login needs an existing one")
     consent: bool = Field(default=False, description="Must be true to sign up. No code is sent without it.")
+    captcha_token: str | None = Field(default=None, max_length=2048, description="Cloudflare Turnstile token")
 
 
 class OtpVerifyIn(BaseModel):

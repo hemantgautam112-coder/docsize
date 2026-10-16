@@ -16,7 +16,7 @@ from app.api.deps import (
     verify_csrf,
 )
 from app.config import settings
-from app.models import DocumentType, ExamProfile, OriginalDocument, User
+from app.models import DerivedFile, DocumentType, ExamProfile, OriginalDocument, User
 from app.schemas import DerivedOut, DocumentOut, DocumentUpdate, ProcessIn
 from app.api.derived import to_derived_out
 from app.services.audit import log_event
@@ -30,6 +30,7 @@ from app.services.documents import (
 )
 from app.services.processing import build_parameters, resolve_spec, run_processing
 from app.services.documents import image_to_pdf
+from app.services.limits import enforce_new_account_daily_limit
 from app.services.processing_common import ProcessingError
 
 router = APIRouter(prefix="/documents", tags=["documents"])
@@ -54,6 +55,7 @@ async def upload_document(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> OriginalDocument:
+    enforce_new_account_daily_limit(db, user, OriginalDocument, settings.new_account_daily_uploads, "upload")
     data = await file.read(settings.max_upload_bytes + _OVERSIZE_PROBE_BYTES)
     if len(data) > settings.max_upload_bytes:
         raise HTTPException(
@@ -146,6 +148,7 @@ def process_document(
     db: Session = Depends(get_db),
 ) -> DerivedOut:
     started = time.perf_counter()
+    enforce_new_account_daily_limit(db, user, DerivedFile, settings.new_account_daily_processes, "process")
     doc = get_owned_original(db, document_id, user)
     kind = "pdf" if doc.mime_type == "application/pdf" else "image"
 

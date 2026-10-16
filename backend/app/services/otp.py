@@ -39,6 +39,10 @@ class OtpRateLimitedError(OtpError):
     pass
 
 
+class OtpLockedError(OtpError):
+    """Too many wrong codes. The address is locked for a while. The message is the same for every address."""
+
+
 class OtpInvalidError(OtpError):
     """Wrong, expired, or locked-out code. One message for all three, so the response reveals nothing extra."""
 
@@ -154,6 +158,15 @@ def request_otp(db: Session, raw_identifier: str, provider: OtpProvider | None =
             f"Too many codes requested. Please wait {settings.otp_request_window_minutes} minutes and try again."
         )
 
+    day_start = now - timedelta(hours=24)
+    requests_today = db.scalar(
+        select(func.count())
+        .select_from(OtpCode)
+        .where(OtpCode.identifier == identifier, OtpCode.created_at >= day_start)
+    )
+    if (requests_today or 0) >= settings.otp_requests_per_day:
+        raise OtpRateLimitedError("Too many codes have been sent to this address today. Please try again tomorrow.")
+
     db.execute(
         update(OtpCode)
         .where(OtpCode.identifier == identifier, OtpCode.consumed_at.is_(None))
@@ -183,6 +196,18 @@ def verify_otp(db: Session, raw_identifier: str, code: str) -> str:
     """
     identifier = normalize_identifier(raw_identifier)
     now = utcnow()
+
+    # Lock the address after too many wrong codes within the lock window.
+    lock_start = now - timedelta(minutes=settings.otp_lock_minutes)
+    recent_wrong = db.scalar(
+        select(func.coalesce(func.sum(OtpCode.attempts), 0)).where(
+            OtpCode.identifier == identifier, OtpCode.created_at >= lock_start
+        )
+    )
+    if (recent_wrong or 0) >= settings.otp_max_attempts:
+        raise OtpLockedError(
+            f"Too many wrong codes. Please wait {settings.otp_lock_minutes} minutes before trying again."
+        )
 
     otp = db.scalar(
         select(OtpCode)

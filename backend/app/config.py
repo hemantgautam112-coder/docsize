@@ -42,6 +42,18 @@ class Settings(BaseSettings):
     otp_max_attempts: int = 3
     otp_request_limit: int = 3
     otp_request_window_minutes: int = 15
+    # Codes one address can be sent per day, whatever the IP address.
+    otp_requests_per_day: int = 10
+    # After this many wrong codes, the address is locked for otp_lock_minutes.
+    otp_lock_minutes: int = 60
+
+    # Cloudflare Turnstile (free CAPTCHA). Empty in development, where the check is skipped.
+    turnstile_secret_key: str = ""
+
+    # Accounts younger than this are limited to the daily numbers below.
+    new_account_window_hours: int = 24
+    new_account_daily_uploads: int = 5
+    new_account_daily_processes: int = 5
 
     max_upload_mb: int = 10
     derived_retention_days: int = 30
@@ -49,7 +61,8 @@ class Settings(BaseSettings):
     frontend_origin: str = "http://localhost:5173"
     cookie_secure: bool = False
 
-    jwt_expire_minutes: int = 60 * 24 * 7
+    # Login lasts one day. Shorter sessions limit the damage from a copied cookie.
+    jwt_expire_minutes: int = 60 * 24
 
     # OAuth client ID from Google Cloud Console. Leave empty to disable Google sign-in.
     google_client_id: str = ""
@@ -75,6 +88,8 @@ class Settings(BaseSettings):
         elif len(self.secret_key) < 32:
             raise ValueError("SECRET_KEY must be at least 32 characters long.")
 
+        if self.app_env == "production" and not self.turnstile_secret_key:
+            raise ValueError("TURNSTILE_SECRET_KEY must be set in production (free CAPTCHA on sign-up).")
         if self.app_env == "production" and not self.smtp_host:
             raise ValueError("SMTP_HOST must be set in production so OTP codes can be emailed.")
         if self.app_env == "production" and not self.cookie_secure:

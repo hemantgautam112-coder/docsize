@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { api } from "../api/endpoints.js";
 import GoogleSignInButton from "../components/GoogleSignInButton.jsx";
+import Turnstile from "../components/Turnstile.jsx";
 import Logo from "../components/Logo.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 import { Spinner } from "../components/ui.jsx";
@@ -53,6 +54,9 @@ export default function Login() {
   const [googleError, setGoogleError] = useState(null);
   const [consentHighlight, setConsentHighlight] = useState(false);
   const [notice, setNotice] = useState(null);
+  // The security check token. null means the check has not passed yet. Each request uses a fresh check.
+  const [captchaToken, setCaptchaToken] = useState(null);
+  const [captchaKey, setCaptchaKey] = useState(0);
   // Assume mobile is on until the server says otherwise, so a failed options call doesn't hide it.
   const [mobileEnabled, setMobileEnabled] = useState(true);
 
@@ -98,15 +102,22 @@ export default function Login() {
       refuseWithoutConsent(CONSENT_MESSAGE, setError);
       return;
     }
+    if (captchaToken === null) {
+      setError("Please complete the security check first.");
+      return;
+    }
     setBusy(true);
     try {
-      const response = await api.requestOtp(identifier.trim(), tab, consent);
+      const response = await api.requestOtp(identifier.trim(), tab, consent, captchaToken);
       setNotice(response.message);
       setStep("code");
     } catch (err) {
       setError(err.message);
     } finally {
       setBusy(false);
+      // Tokens are single-use, so the next attempt needs a fresh check.
+      setCaptchaToken(null);
+      setCaptchaKey((k) => k + 1);
     }
   }
 
@@ -233,6 +244,8 @@ export default function Login() {
                   </label>
                 )}
 
+                <Turnstile onToken={setCaptchaToken} resetKey={captchaKey} />
+
                 {error && (
                   <p role="alert" className="rounded-xl border border-[#E5484D]/30 bg-[#FDECEC] px-4 py-3 text-sm text-[#B42318]">
                     {error}
@@ -242,7 +255,7 @@ export default function Login() {
                 <button
                   type="submit"
                   className="flex h-[54px] w-full items-center justify-center rounded-xl bg-[#ED7631] text-[16px] font-semibold text-white transition hover:bg-[#E0692A] disabled:cursor-not-allowed disabled:opacity-60"
-                  disabled={busy || !identifier.trim()}
+                  disabled={busy || !identifier.trim() || captchaToken === null}
                 >
                   {busy ? "Sending..." : isSignup ? "Sign Up" : "Login"}
                 </button>

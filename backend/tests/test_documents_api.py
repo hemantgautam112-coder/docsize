@@ -255,3 +255,20 @@ def test_scanned_photo_can_be_saved_as_pdf(make_user, photo_bytes):
     assert body["mime_type"] == "application/pdf"
     assert body["page_count"] == 1
     assert body["original_filename"] == "scan.jpg"
+
+
+def test_new_account_upload_limit(make_user, monkeypatch):
+    from app.config import settings
+    from tests.helpers import make_photo_bytes
+
+    monkeypatch.setattr(settings, "new_account_daily_uploads", 2)
+    user = make_user("9100000017")
+    user.sign_in()
+    small = make_photo_bytes(60, 80)
+
+    assert user.upload("a.jpg", small, "photo", "image/jpeg").status_code == 201
+    assert user.upload("b.jpg", small, "photo", "image/jpeg").status_code == 201
+    response = user.upload("c.jpg", small, "photo", "image/jpeg")
+
+    assert response.status_code == 429
+    assert "per day" in response.json()["detail"] or "a day" in response.json()["detail"]

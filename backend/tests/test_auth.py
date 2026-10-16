@@ -31,7 +31,7 @@ def test_new_account_requires_consent(make_user):
     response = user.verify(consent=False)
 
     assert response.status_code == 400
-    assert "privacy policy" in response.json()["detail"]
+    assert "We could not sign you in" in response.json()["detail"]
 
 
 def test_wrong_codes_lock_out_the_correct_code(make_user, otp_sink):
@@ -43,7 +43,7 @@ def test_wrong_codes_lock_out_the_correct_code(make_user, otp_sink):
     for _ in range(3):
         assert user.verify(code=wrong).status_code == 400
 
-    assert user.verify(code=correct).status_code == 400
+    assert user.verify(code=correct).status_code == 429
 
 
 def test_expired_code_is_rejected(make_user):
@@ -134,23 +134,23 @@ def _derived_key(derived_id: str) -> str:
         return db.get(DerivedFile, derived_id).storage_key
 
 
-def test_login_for_unknown_account_says_to_sign_up(make_user):
+def test_login_for_unknown_account_gets_the_generic_message(make_user):
     user = make_user("9876500001")
 
-    response = user.request_code(purpose="login")
+    assert user.request_code(purpose="login").status_code == 202
+    response = user.verify(consent=False, purpose="login")
 
-    assert response.status_code == 404
-    assert "Sign up first" in response.json()["detail"]
+    assert response.status_code == 400
+    assert "We could not sign you in" in response.json()["detail"]
 
 
-def test_signup_for_existing_account_says_to_log_in(make_user):
+def test_signup_for_existing_account_just_signs_in(make_user):
     user = make_user("9876500002")
     user.sign_in()
+    returning = make_user("9876500002")
 
-    response = user.request_code(purpose="signup")
-
-    assert response.status_code == 409
-    assert "Log in instead" in response.json()["detail"]
+    assert returning.request_code(purpose="signup").status_code == 202
+    assert returning.verify(consent=False, purpose="signup").status_code == 200
 
 
 def test_existing_user_can_log_in_with_a_new_session(make_user):
@@ -170,7 +170,7 @@ def test_login_never_creates_an_account(make_user):
     user.request_code(purpose="signup")
     response = user.verify(consent=True, purpose="login")
 
-    assert response.status_code == 404
+    assert response.status_code == 400
     with SessionLocal() as db:
         assert db.query(User).filter(User.mobile == "9876500004").count() == 0
 
@@ -283,3 +283,31 @@ def test_login_does_not_need_consent(make_user):
     returning = make_user("9876500021@example.com")
 
     assert returning.request_code(purpose="login", consent=False).status_code == 202
+
+
+def test_failed_captcha_sends_no_code(make_user, otp_sink, monkeypatch):
+    from app.api import auth as auth_api
+
+    monkeypatch.setattr(auth_api, "verify_captcha", lambda token, ip: False)
+    user = make_user("9876500030@example.com")
+
+    response = user.request_code(purpose="signup")
+
+    assert response.status_code == 400
+    assert "security check" in response.json()["detail"]
+    assert otp_sink.codes == {}
+
+
+def test_daily_code_cap_per_address(make_user, monkeypatch):
+    from app.config import settings
+
+    monkeypatch.setattr(settings, "otp_requests_per_day", 2)
+    monkeypatch.setattr(settings, "otp_request_limit", 50)
+    user = make_user("9876500031@example.com")
+
+    assert user.request_code(purpose="signup").status_code == 202
+    assert user.request_code(purpose="signup").status_code == 202
+    response = user.request_code(purpose="signup")
+
+    assert response.status_code == 429
+    assert "tomorrow" in response.json()["detail"]

@@ -4,6 +4,12 @@
 hdvault.in {
 	encode zstd gzip
 
+	# Rejects request bodies over 11 MB before they reach the app. The app's own limit is 10 MB per file;
+	# the extra 1 MB covers multipart form overhead.
+	request_body {
+		max_size 11MB
+	}
+
 	# API requests: /api/auth/me goes to the backend as /auth/me.
 	handle_path /api/* {
 		reverse_proxy api:8000 {
@@ -13,10 +19,13 @@ hdvault.in {
 	}
 
 	# Everything else is the React app. Unknown paths return index.html for client-side routes.
+	# The Content-Security-Policy is set only on the app pages. API responses already get one from the backend.
 	handle {
 		root * /srv
 		try_files {path} /index.html
 		file_server
+
+		header Content-Security-Policy "default-src 'self'; script-src 'self' https://challenges.cloudflare.com https://accounts.google.com https://apis.google.com https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src 'self' https://challenges.cloudflare.com https://accounts.google.com https://apis.google.com; frame-src 'self' blob: https://challenges.cloudflare.com https://accounts.google.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
 	}
 
 	header {
